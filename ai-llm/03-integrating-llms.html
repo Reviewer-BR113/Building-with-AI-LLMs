@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI + LLMs · 03 Integrating LLMs into Apps — Lecture</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .vlbl{font-family:var(--mono);font-size:.68rem;color:var(--faint);letter-spacing:.05em;margin:18px 0 8px}
+  .stg{background:#0a0f18;border:1px solid var(--border-2);border-radius:12px;padding:16px}
+  .pipe{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:.76rem}
+  .pnode{flex:1;min-width:110px;border:1px solid var(--border-2);border-radius:10px;padding:12px;background:var(--panel);text-align:center;transition:opacity .25s,border-color .25s,background .25s;opacity:.4}
+  .pnode.on{opacity:1;border-color:var(--accent-2);background:rgba(167,139,250,.1)}
+  .pnode .ic{font-size:1.3rem} .pnode .t{margin-top:5px;color:var(--text)} .pnode .d{margin-top:4px;font-size:.6rem;color:var(--faint);line-height:1.3}
+  .parrow{display:flex;align-items:center;color:var(--faint)}
+  .payload{margin-top:14px;padding:11px 13px;border:1px dashed var(--accent-2);border-radius:8px;background:rgba(167,139,250,.05);font-family:var(--mono);font-size:.75rem;color:var(--muted);min-height:1.2em}
+  .payload b{color:var(--accent-2)}
+  .keyrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);font-size:.76rem}
+  .kn{border:1px solid var(--border-2);border-radius:10px;padding:12px 15px;background:var(--panel);text-align:center;opacity:.45;transition:opacity .25s,border-color .25s}
+  .kn.on{opacity:1}
+  .kn.front{border-color:var(--accent)} .kn.back{border-color:var(--accent-2)} .kn.llm{border-color:var(--accent-3)}
+  .kn .key{font-size:.6rem;color:var(--warn);margin-top:4px}
+  .kn .nokey{font-size:.6rem;color:var(--faint);margin-top:4px}
+  .kar{color:var(--faint)}
+  .states{display:flex;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:.74rem}
+  .st{flex:1;min-width:90px;border:1px solid var(--border-2);border-radius:9px;padding:11px;text-align:center;background:var(--panel);opacity:.4;transition:opacity .25s,border-color .25s}
+  .st.on{opacity:1}
+  .st.idle.on{border-color:var(--border-2)} .st.load.on{border-color:var(--warn);color:var(--warn)} .st.ok.on{border-color:var(--ok);color:var(--ok)} .st.err.on{border-color:var(--bad);color:var(--bad)}
+  .stnote{margin-top:12px;padding:10px 13px;border:1px dashed var(--border-2);border-radius:8px;font-family:var(--mono);font-size:.74rem;color:var(--muted);min-height:1.2em}
+  .rawbox{border:1px solid var(--border-2);border-radius:9px;padding:11px;font-family:var(--mono);font-size:.74rem;background:var(--panel);color:var(--muted)}
+  .uicard{border:1px solid var(--accent-2);border-radius:11px;padding:14px;background:rgba(167,139,250,.06);margin-top:12px;opacity:.35;transition:opacity .3s}
+  .uicard.on{opacity:1}
+  .uicard .ttl{font-weight:700;font-size:1rem;margin-bottom:5px}
+  .uicard .sm{font-size:.84rem;color:var(--muted);margin-bottom:8px}
+  .uicard .stars{color:var(--warn);letter-spacing:2px}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">AI + LLMs · 03 Integrating LLMs</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="overview.html">Section overview</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv"><span class="n">Lesson 03</span> · 🔌 Foundations</div>
+    <h1 class="rv d1">Wiring an LLM <span class="grad">into an app</span></h1>
+    <p class="lead rv d2">Knowing how models work, how do you actually plug one into a website? Let's trace the path from a button click, through your backend, to the model, and back onto the screen.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>The loop</b><span>frontend → backend → LLM</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>API calls</b><span>&amp; keeping keys safe</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>I/O flow</b><span>loading &amp; errors</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>For the UI</b><span>shape the response</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 CONCEPT -->
+<section id="concept">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Idea</p>
+    <h2 class="rv">The model is just another service you call</h2>
+    <p class="lead rv d1">To your app, an LLM is a service you send text to and get text back from — much like any other web API. The interesting parts are <b>where</b> you call it from (safely), how you handle the <b>wait</b>, and how you turn the reply into something the UI can show.</p>
+  </div>
+</section>
+
+<!-- 02 THE LOOP -->
+<section id="loop">
+  <div class="container">
+    <p class="eyebrow rv">02 · The Basic Flow</p>
+    <h2 class="rv">Frontend → backend → LLM → response</h2>
+    <p class="lead rv d1">A user acts in the browser (frontend). The frontend asks your server (backend). Your backend calls the LLM and, when the reply arrives, sends it back to the frontend to display. Step through the round trip:</p>
+    <div class="vlbl rv d2">▶ TRACE THE ROUND TRIP</div>
+    <div class="rv d2" id="loopViz">
+      <div class="stg" id="loopStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 API + KEYS -->
+<section id="api">
+  <div class="container">
+    <p class="eyebrow rv">03 · API-Based Integration</p>
+    <h2 class="rv">Why the backend makes the call</h2>
+    <p class="lead rv d1">Calling an LLM needs a secret <b>API key</b> (it identifies your account and gets billed). That key must live on your <b>backend</b>, never in the browser — anyone can read frontend code. So the frontend asks your backend, and your backend holds the key and talks to the LLM.</p>
+    <div class="vlbl rv d2">▶ WHERE DOES THE KEY LIVE?</div>
+    <div class="rv d2" id="keyViz">
+      <div class="stg" id="keyStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+    <div class="callout mistake rv d2" style="margin-top:14px"><b>Never —</b> put your API key in frontend code or a public repo. It would be stolen within hours, and every use billed to you. Keys stay on the server (in a <code>.env</code>).</div>
+  </div>
+</section>
+
+<!-- 04 I/O FLOW -->
+<section id="ioflow">
+  <div class="container">
+    <p class="eyebrow rv">04 · Managing Input/Output Flow</p>
+    <h2 class="rv">Handle the wait, and the failures</h2>
+    <p class="lead rv d1">LLM calls take a moment — sometimes several seconds — and sometimes they fail. A good integration moves through clear <b>states</b>: idle, loading, then success <em>or</em> error. The user should always know what's happening.</p>
+    <div class="vlbl rv d2">▶ STEP THROUGH THE STATES</div>
+    <div class="rv d2" id="stateViz">
+      <div class="stg" id="stateStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 STRUCTURE FOR UI -->
+<section id="ui">
+  <div class="container">
+    <p class="eyebrow rv">05 · Structuring Responses for the UI</p>
+    <h2 class="rv">From raw text to a real component</h2>
+    <p class="lead rv d1">The model returns text. To show it as a nice card, list, or table, ask the model for a <b>predictable structure</b> (remember Lesson 02), then your app reads the fields and renders them. Watch raw output become UI:</p>
+    <div class="vlbl rv d2">▶ RAW RESPONSE → UI CARD</div>
+    <div class="rv d2" id="uiViz">
+      <div class="stg" id="uiStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- WATCH OUT -->
+<section id="watch">
+  <div class="container">
+    <p class="eyebrow rv">06 · Keep in Mind</p>
+    <h2 class="rv">Integration essentials</h2>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card rv d1"><h3>🔑 Keys on the backend</h3><p>The browser must never see your API key. Route every call through your server.</p></div>
+      <div class="card rv d2"><h3>⏳ Plan for the wait</h3><p>Show loading, and always handle timeouts and errors gracefully.</p></div>
+      <div class="card rv d3"><h3>📦 Ask for structure</h3><p>A predictable response shape is what makes rendering into UI reliable.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <div class="container">
+    <p class="eyebrow rv">07 · Check Your Understanding</p>
+    <h2 class="rv">Questions</h2>
+    <p class="lead rv d1">Click any question to reveal a plain-English answer.</p>
+    <div style="margin-top:24px;max-width:820px" id="accWrap"></div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">Recap</p>
+    <h2 class="rv">Summary</h2>
+    <div class="split top" style="margin-top:22px">
+      <div class="rv d1">
+        <div class="timeline">
+          <div class="tl-item"><span class="dot"></span><b>The loop</b><p>Frontend → backend → LLM → back to the frontend.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>API &amp; keys</b><p>The backend holds the secret key and makes the call.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>I/O flow</b><p>Idle → loading → success or error; always show state.</p></div>
+          <div class="tl-item"><span class="dot" style="border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12)"></span><b>For the UI</b><p>Ask for structure, then render the fields.</p></div>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="grid" style="gap:12px">
+          <div class="card" style="padding:15px"><b>🔌 An LLM is a service you call.</b></div>
+          <div class="card" style="padding:15px"><b>🔑 Keys live on the backend only.</b></div>
+          <div class="card" style="padding:15px"><b>⏳ Handle loading &amp; errors.</b></div>
+          <div class="card" style="padding:15px"><b>📦 Structure makes it renderable.</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="pager">
+  <a class="prev" href="02-designing-prompts.html"><span class="dir">← Previous</span><b>Designing Prompts</b></a>
+  <a class="next" href="04-ai-features.html"><span class="dir">Next lesson →</span><b>AI-Powered Features</b></a>
+</footer>
+<div class="footer">Mentoring · Building with AI + LLMs · 03 Integrating LLMs into Apps</div>
+<script src="../assets/app.js"></script>
+<script>
+function mkAlgo(vizId, stageId, frames, renderer){
+  var root=document.getElementById(vizId);
+  if(!root || !window.AlgoViz) return;
+  var stage=document.getElementById(stageId);
+  AlgoViz(root, frames.map(function(fr){ return {explain:fr.explain, apply:function(){ renderer(stage, fr); }}; }));
+}
+
+/* (a) the loop */
+(function(){
+  var NODES=[
+    {ic:"🖥️",t:"Frontend",d:"the browser / UI"},
+    {ic:"🔧",t:"Backend",d:"your server"},
+    {ic:"🧠",t:"LLM API",d:"the model service"},
+    {ic:"🖥️",t:"Frontend",d:"shows the answer"}
+  ];
+  function render(stage,fr){
+    var html='<div class="pipe">';
+    NODES.forEach(function(n,i){
+      html+='<div class="pnode'+(i===fr.active?' on':'')+'"><div class="ic">'+n.ic+'</div><div class="t">'+n.t+'</div><div class="d">'+n.d+'</div></div>';
+      if(i<NODES.length-1) html+='<div class="parrow">→</div>';
+    });
+    html+='</div><div class="payload">'+fr.payload+'</div>';
+    stage.innerHTML=html;
+  }
+  mkAlgo("loopViz","loopStage",[
+    {active:0,payload:'The user clicks "Generate" and types a request in the browser.',explain:"<b>Frontend.</b> Everything starts with a user action in the UI."},
+    {active:1,payload:'The frontend sends the request to <b>your backend</b> — not directly to the model.',explain:"<b>Backend.</b> The browser calls your own server first. (The next section shows why.)"},
+    {active:2,payload:'The backend calls the <b>LLM API</b> and waits for the generated reply.',explain:"<b>LLM API.</b> Your server sends the prompt to the model service and receives the response."},
+    {active:3,payload:'The reply travels back through the backend to the frontend and appears on screen.',explain:"<b>Back to the frontend.</b> The answer returns along the same path and is displayed. Round trip done."}
+  ],render);
+})();
+
+/* (b) keys */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="keyrow">'+
+      '<div class="kn front'+(fr.n>=1?' on':'')+'">🖥️ Frontend<div class="nokey">no key here</div></div>'+
+      '<span class="kar">→</span>'+
+      '<div class="kn back'+(fr.n>=2?' on':'')+'">🔧 Backend<div class="key">🔑 holds the secret key</div></div>'+
+      '<span class="kar">→</span>'+
+      '<div class="kn llm'+(fr.n>=3?' on':'')+'">🧠 LLM API<div class="nokey">checks the key</div></div>'+
+      '</div>';
+  }
+  mkAlgo("keyViz","keyStage",[
+    {n:1,explain:"The <b>frontend</b> runs in the user's browser, where anyone can view the code. So it must <b>not</b> contain the API key."},
+    {n:2,explain:"The <b>backend</b> is your private server. The secret <b>API key</b> lives here, safely out of users' sight (usually in a <code>.env</code> file)."},
+    {n:3,explain:"The backend attaches the key when it calls the <b>LLM API</b>, which uses it to identify and bill your account. The frontend never touches the key — it only talks to your backend."}
+  ],render);
+})();
+
+/* (c) states */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="states">'+
+      '<div class="st idle'+(fr.s==="idle"?' on':'')+'">💤 Idle</div>'+
+      '<div class="st load'+(fr.s==="load"?' on':'')+'">⏳ Loading…</div>'+
+      '<div class="st ok'+(fr.s==="ok"?' on':'')+'">✅ Success</div>'+
+      '<div class="st err'+(fr.s==="err"?' on':'')+'">⚠️ Error</div>'+
+      '</div><div class="stnote">'+fr.note+'</div>';
+  }
+  mkAlgo("stateViz","stateStage",[
+    {s:"idle",note:"Waiting for the user. Nothing in flight.",explain:"<b>Idle.</b> The starting state — the app is ready and waiting for input."},
+    {s:"load",note:"Request sent. Show a spinner / disable the button so the user knows to wait.",explain:"<b>Loading.</b> The call is in progress (this can take seconds). Always show feedback so it doesn't feel frozen."},
+    {s:"ok",note:"✅ The reply arrived — display it.",explain:"<b>Success.</b> The model responded; render the answer."},
+    {s:"err",note:"⚠️ The call failed (timeout, rate limit, bad response). Show a friendly message and let the user retry.",explain:"<b>Error.</b> Calls do fail. Handle it gracefully — never leave the user staring at a frozen spinner."}
+  ],render);
+})();
+
+/* (d) structure for UI */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="rawbox">Model returns structured text:<br><br>{ title: "Dune", summary: "A desert epic of power &amp; survival.", rating: 5 }</div>'+
+      '<div class="uicard'+(fr.n>=1?' on':'')+'">'+
+      '<div class="ttl">'+(fr.n>=1?'Dune':'—')+'</div>'+
+      '<div class="sm">'+(fr.n>=2?'A desert epic of power &amp; survival.':'')+'</div>'+
+      '<div class="stars">'+(fr.n>=3?'★★★★★':'')+'</div>'+
+      '</div>';
+  }
+  mkAlgo("uiViz","uiStage",[
+    {n:0,explain:"The model was asked to reply in a fixed structure (title, summary, rating). Here's its raw response — predictable fields the app can read."},
+    {n:1,explain:"The app reads the <b>title</b> field and puts it in the card's heading."},
+    {n:2,explain:"It reads the <b>summary</b> and shows it as the description."},
+    {n:3,explain:"It turns the <b>rating</b> number into ★ stars. Raw text became a real UI component — only possible because the response had a predictable shape."}
+  ],render);
+})();
+
+var QA=[
+  ["What's the basic flow of an LLM-powered app?","The frontend (browser) captures the user's input and sends it to your backend. The backend calls the LLM API, waits for the reply, and returns it to the frontend, which displays it. The browser never calls the model directly."],
+  ["Why must API calls to the LLM go through your backend?","Because calling the LLM requires a secret API key tied to your billing. Frontend code is fully visible to users, so a key placed there would be stolen and abused. The backend keeps the key private and makes the call on the frontend's behalf."],
+  ["Where should the API key be stored?","On the server side only — typically in an environment file (.env) that is never committed to the repository or shipped to the browser. The frontend just calls your backend; only the backend knows the key."],
+  ["What states should an AI feature move through?","Idle (waiting), Loading (request in flight — show a spinner), then either Success (display the answer) or Error (show a friendly message and allow retry). Because LLM calls are slow and can fail, handling these states well is essential UX."],
+  ["Why do LLM integrations need loading and error handling more than usual?","Because model calls can take several seconds and can fail (timeouts, rate limits, malformed output). Without visible loading feedback the app feels frozen, and without error handling a failure leaves the user stuck. Both are core, not optional."],
+  ["How do you turn a text response into UI like a card or list?","Ask the model to reply in a predictable structure (fixed fields), then have your app read those fields and render them into components. The consistency from Lesson 02 is what makes reliable rendering possible."]
+];
+var accWrap=document.getElementById("accWrap");
+QA.forEach(function(qa,i){
+  var d=document.createElement("details"); d.className="acc";
+  d.innerHTML='<summary><span class="q">Q'+(i+1)+'</span>'+qa[0]+'<span class="plus">+</span></summary><div class="ans">'+qa[1]+'</div>';
+  accWrap.appendChild(d);
+});
+</script>
+</body>
+</html>

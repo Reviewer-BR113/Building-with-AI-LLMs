@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI + LLMs · 10 Embeddings &amp; Vector Search — Lecture</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .vlbl{font-family:var(--mono);font-size:.68rem;color:var(--faint);letter-spacing:.05em;margin:18px 0 8px}
+  .stg{background:#0a0f18;border:1px solid var(--border-2);border-radius:12px;padding:16px}
+  .embrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);font-size:.8rem}
+  .word{border:1px solid var(--accent);border-radius:9px;padding:11px 16px;background:rgba(34,211,238,.08);color:var(--accent)}
+  .arrow{color:var(--faint)}
+  .vec{border:1px solid var(--accent-2);border-radius:9px;padding:11px 14px;background:rgba(167,139,250,.06);color:var(--accent-2);font-size:.74rem;opacity:.35;transition:opacity .3s}
+  .vec.on{opacity:1}
+  .enote{margin-top:12px;padding:10px 13px;border:1px dashed var(--border-2);border-radius:8px;font-family:var(--mono);font-size:.74rem;color:var(--muted);min-height:1.2em}
+  .space{position:relative;height:250px;border:1px solid var(--border-2);border-radius:10px;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.02),transparent);overflow:hidden}
+  .dot{position:absolute;transform:translate(-50%,-50%);padding:4px 9px;border-radius:999px;font-family:var(--mono);font-size:.68rem;border:1px solid;opacity:0;transition:opacity .4s,box-shadow .3s;white-space:nowrap}
+  .dot.on{opacity:1}
+  .dot.animal{border-color:var(--accent);color:var(--accent);background:rgba(34,211,238,.12)}
+  .dot.royal{border-color:var(--accent-2);color:var(--accent-2);background:rgba(167,139,250,.12)}
+  .dot.vehicle{border-color:var(--accent-3);color:var(--accent-3);background:rgba(244,114,182,.12)}
+  .dot.query{border-color:var(--ok);color:var(--ok);background:rgba(52,211,153,.18);font-weight:700}
+  .dot.near{box-shadow:0 0 0 3px rgba(52,211,153,.35)}
+  .clbl{position:absolute;font-family:var(--mono);font-size:.6rem;color:var(--faint);opacity:0;transition:opacity .4s}
+  .clbl.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">AI + LLMs · 10 Embeddings &amp; Vectors</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="overview.html">Section overview</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv"><span class="n">Lesson 10</span> · 📊 Going Deeper</div>
+    <h1 class="rv d1">Embeddings &amp; <span class="grad">vector search</span></h1>
+    <p class="lead rv d2">How does AI find things by <em>meaning</em>? It turns text into numbers — <b>embeddings</b> — arranged so that similar meanings sit close together. Search then becomes "find the nearest points." This is the engine under semantic search and RAG.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>Embeddings</b><span>meaning → numbers</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>Vector space</b><span>similar sits close</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>Nearest neighbor</b><span>find the closest</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>Where it's used</b><span>search, RAG, more</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 CONCEPT -->
+<section id="concept">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Idea</p>
+    <h2 class="rv">Turn meaning into a location</h2>
+    <p class="lead rv d1">Computers compare numbers easily, not meanings. So AI converts each piece of text into a list of numbers positioned in space such that <b>closeness = similarity of meaning</b>. Once meaning is a location, "what's similar?" becomes "what's nearby?" — a problem computers solve fast.</p>
+  </div>
+</section>
+
+<!-- 02 EMBEDDINGS -->
+<section id="embeddings">
+  <div class="container">
+    <p class="eyebrow rv">02 · What Is an Embedding</p>
+    <h2 class="rv">Text in, a list of numbers out</h2>
+    <p class="lead rv d1">An <b>embedding model</b> reads text and outputs a fixed list of numbers (often hundreds) — its <b>vector</b>. Each number captures some aspect of meaning. Crucially, texts that mean similar things get similar numbers.</p>
+    <div class="vlbl rv d2">▶ TURN A WORD INTO A VECTOR</div>
+    <div class="rv d2" id="embViz">
+      <div class="stg" id="embStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 VECTOR SPACE -->
+<section id="space">
+  <div class="container">
+    <p class="eyebrow rv">03 · Vectors as Points in Space</p>
+    <h2 class="rv">Similar meanings cluster together</h2>
+    <p class="lead rv d1">If we imagine those numbers as coordinates, every word becomes a <b>point</b>. Words about the same thing land near each other, forming clusters. (Real embeddings have hundreds of dimensions; here's a 2-D sketch.)</p>
+    <div class="vlbl rv d2">▶ PLOT THE WORDS</div>
+    <div class="rv d2" id="spaceViz">
+      <div class="stg" id="spaceStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 NEAREST NEIGHBOR -->
+<section id="nearest">
+  <div class="container">
+    <p class="eyebrow rv">04 · Nearest-Neighbor Search</p>
+    <h2 class="rv">To search, find the closest points</h2>
+    <p class="lead rv d1">Now searching is easy: turn the <b>query</b> into a point too, then find the points <b>nearest</b> to it. Those are the most similar in meaning — no matter what exact words they use.</p>
+    <div class="vlbl rv d2">▶ SEARCH BY NEARNESS</div>
+    <div class="rv d2" id="nearViz">
+      <div class="stg" id="nearStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 USES -->
+<section id="uses">
+  <div class="container">
+    <p class="eyebrow rv">05 · Where It's Used</p>
+    <h2 class="rv">One idea, many features</h2>
+    <p class="lead rv d1">Embeddings quietly power a huge amount of modern AI. Once you can measure "how similar are these two things by meaning," a lot becomes possible.</p>
+    <div class="grid g2 rv d1" style="margin-top:16px">
+      <div class="card"><h3>🔎 Semantic search</h3><p>Find results by meaning, not keywords (Lesson 04's AI search).</p></div>
+      <div class="card"><h3>📚 RAG</h3><p>Retrieve the most relevant pieces of your documents to answer questions (next lesson).</p></div>
+      <div class="card"><h3>🎯 Recommendations</h3><p>"More like this" — items whose embeddings are near what you liked.</p></div>
+      <div class="card"><h3>🧹 Grouping &amp; dedup</h3><p>Cluster similar items, or spot near-duplicates, by nearness.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- WATCH OUT -->
+<section id="watch">
+  <div class="container">
+    <p class="eyebrow rv">06 · Keep in Mind</p>
+    <h2 class="rv">The mental model</h2>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card rv d1"><h3>📍 Meaning = position</h3><p>Embeddings place similar meanings near each other in space.</p></div>
+      <div class="card rv d2"><h3>📐 Similarity = distance</h3><p>Closer points mean more similar meaning; that's all "vector search" measures.</p></div>
+      <div class="card rv d3"><h3>🗄️ Stored in a vector DB</h3><p>A vector database stores embeddings and finds nearest neighbors fast, at scale.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <div class="container">
+    <p class="eyebrow rv">07 · Check Your Understanding</p>
+    <h2 class="rv">Questions</h2>
+    <p class="lead rv d1">Click any question to reveal a plain-English answer.</p>
+    <div style="margin-top:24px;max-width:820px" id="accWrap"></div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">Recap</p>
+    <h2 class="rv">Summary</h2>
+    <div class="split top" style="margin-top:22px">
+      <div class="rv d1">
+        <div class="timeline">
+          <div class="tl-item"><span class="dot" style="position:static;transform:none;padding:0"></span><b>Embedding</b><p>Text → a list of numbers capturing meaning.</p></div>
+          <div class="tl-item"><span class="dot" style="position:static;transform:none;padding:0"></span><b>Vector space</b><p>Similar meanings cluster as nearby points.</p></div>
+          <div class="tl-item"><span class="dot" style="position:static;transform:none;padding:0"></span><b>Nearest neighbor</b><p>Search = find the points closest to the query.</p></div>
+          <div class="tl-item"><span class="dot" style="position:static;transform:none;padding:0;border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12)"></span><b>Uses</b><p>Semantic search, RAG, recommendations, dedup.</p></div>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="grid" style="gap:12px">
+          <div class="card" style="padding:15px"><b>🔢 Meaning becomes numbers.</b></div>
+          <div class="card" style="padding:15px"><b>📍 Similar meaning = nearby point.</b></div>
+          <div class="card" style="padding:15px"><b>🔎 Search = nearest neighbors.</b></div>
+          <div class="card" style="padding:15px"><b>⚙️ The engine behind RAG.</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="pager">
+  <a class="prev" href="09-validating-outputs.html"><span class="dir">← Previous</span><b>Validating AI Outputs</b></a>
+  <a class="next" href="11-rag.html"><span class="dir">Next lesson →</span><b>RAG — Answer from Your Data</b></a>
+</footer>
+<div class="footer">Mentoring · Building with AI + LLMs · 10 Embeddings &amp; Vector Search</div>
+<script src="../assets/app.js"></script>
+<script>
+function mkAlgo(vizId, stageId, frames, renderer){
+  var root=document.getElementById(vizId);
+  if(!root || !window.AlgoViz) return;
+  var stage=document.getElementById(stageId);
+  AlgoViz(root, frames.map(function(fr){ return {explain:fr.explain, apply:function(){ renderer(stage, fr); }}; }));
+}
+
+/* (a) embedding */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="embrow">'+
+      '<div class="word">"cat"</div>'+
+      '<span class="arrow">→ embedding model →</span>'+
+      '<div class="vec'+(fr.n>=1?' on':'')+'">[ 0.82, -0.11, 0.44, 0.90, -0.23, … ]</div>'+
+      '</div><div class="enote">'+fr.note+'</div>';
+  }
+  mkAlgo("embViz","embStage",[
+    {n:0,note:'The word "cat" — meaning a human understands, but a computer can\'t compare directly.',explain:"We start with a word. Computers can't measure how \"close in meaning\" two words are — not as text."},
+    {n:1,note:'→ a vector: a fixed list of numbers (real ones have hundreds).',explain:"The <b>embedding model</b> converts it into a list of numbers — its vector. Each number encodes some learned aspect of meaning."},
+    {n:1,note:'"dog" would get a SIMILAR list; "car" a very DIFFERENT one. Similar meaning → similar numbers.',explain:"The magic: texts with similar meaning get similar vectors. \"dog\" lands close to \"cat\"; \"car\" lands far away. Now meaning is comparable — as numbers."}
+  ],render);
+})();
+
+/* dots data (shared by space + nearest) */
+var DOTS=[
+  {t:"cat",c:"animal",x:20,y:26},{t:"dog",c:"animal",x:30,y:20},{t:"puppy",c:"animal",x:24,y:36},
+  {t:"king",c:"royal",x:74,y:24},{t:"queen",c:"royal",x:82,y:32},{t:"prince",c:"royal",x:70,y:38},
+  {t:"car",c:"vehicle",x:42,y:80},{t:"truck",c:"vehicle",x:56,y:82}
+];
+function dotHTML(showClasses, extra){
+  var html="";
+  DOTS.forEach(function(d){
+    var on = showClasses.indexOf(d.c)>=0;
+    var near = extra && extra.near && extra.near.indexOf(d.t)>=0;
+    html+='<div class="dot '+d.c+(on?' on':'')+(near?' near':'')+'" style="left:'+d.x+'%;top:'+d.y+'%">'+d.t+'</div>';
+  });
+  return html;
+}
+
+/* (b) vector space */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML='<div class="space">'+dotHTML(fr.show)+
+      '<div class="clbl '+(fr.show.indexOf("animal")>=0?'on':'')+'" style="left:12%;top:8%">🐾 animals</div>'+
+      '<div class="clbl '+(fr.show.indexOf("royal")>=0?'on':'')+'" style="left:66%;top:8%">👑 royalty</div>'+
+      '<div class="clbl '+(fr.show.indexOf("vehicle")>=0?'on':'')+'" style="left:40%;top:64%">🚗 vehicles</div>'+
+      '</div>';
+  }
+  mkAlgo("spaceViz","spaceStage",[
+    {show:[],explain:"Picture the vectors as points on a map. Empty for now — let's add words group by group."},
+    {show:["animal"],explain:"The animal words — cat, dog, puppy — land <b>close together</b>. Their meanings are related, so their vectors are near."},
+    {show:["animal","royal"],explain:"Royalty words form their <b>own cluster</b>, far from animals. Different meaning → different region."},
+    {show:["animal","royal","vehicle"],explain:"Vehicles cluster elsewhere again. The space organizes itself by meaning — related words are neighbors, unrelated ones are distant. Nobody placed them by hand; the embeddings did."}
+  ],render);
+})();
+
+/* (c) nearest neighbor */
+(function(){
+  function render(stage,fr){
+    var q = fr.showQuery ? '<div class="dot query on'+(fr.near?' ':'')+'" style="left:22%;top:30%">🔎 "kitten"</div>' : '';
+    stage.innerHTML='<div class="space">'+dotHTML(["animal","royal","vehicle"],{near:fr.near})+q+'</div><div class="enote">'+fr.note+'</div>';
+  }
+  mkAlgo("nearViz","nearStage",[
+    {showQuery:false,near:[],note:'All our words, plotted.',explain:"Here's the full map again — animals, royalty, vehicles."},
+    {showQuery:true,near:[],note:'The search word "kitten" is embedded and placed as a new point.',explain:"A user searches <b>\"kitten\"</b>. We embed it the same way and drop it into the space — it lands right among the animals."},
+    {showQuery:true,near:["cat","puppy","dog"],note:'✅ Its nearest neighbors — cat, puppy, dog — are returned as the best matches.',explain:"We find the <b>nearest points</b> to \"kitten\": cat, puppy, dog. Those are the results — matched by meaning, even though \"kitten\" shares no letters with \"puppy.\" That's vector search."}
+  ],render);
+})();
+
+var QA=[
+  ["What is an embedding?","A list of numbers (a vector) that represents the meaning of a piece of text, produced by an embedding model. Each number captures some aspect of meaning, and crucially, texts with similar meaning get similar vectors — so meaning becomes something a computer can compare mathematically."],
+  ["Why turn text into numbers at all?","Computers can compare numbers easily but can't directly measure how similar two meanings are as text. Converting text to vectors lets 'how similar in meaning?' become 'how close are these points?' — a fast, precise numeric calculation."],
+  ["What does it mean that similar meanings are 'close together'?","When embeddings are viewed as points in space, texts about the same thing land near each other and form clusters, while unrelated texts land far apart. Distance between points corresponds to difference in meaning."],
+  ["How does vector (nearest-neighbor) search work?","The query is embedded into the same space as the stored items, then the system finds the points nearest to the query point. Those nearest neighbors are the most similar in meaning, regardless of whether they share any exact words with the query."],
+  ["Why can vector search match texts with no shared words?","Because it compares meaning (position in the space), not letters. 'Kitten' and 'puppy' share no characters, but their embeddings are close because they mean similar things, so a search for one can surface the other."],
+  ["Where are embeddings used, and where are they stored?","They power semantic search, RAG, recommendations ('more like this'), and grouping/deduplication. They're stored in a vector database, which is built to hold many embeddings and find nearest neighbors quickly at scale."]
+];
+var accWrap=document.getElementById("accWrap");
+QA.forEach(function(qa,i){
+  var d=document.createElement("details"); d.className="acc";
+  d.innerHTML='<summary><span class="q">Q'+(i+1)+'</span>'+qa[0]+'<span class="plus">+</span></summary><div class="ans">'+qa[1]+'</div>';
+  accWrap.appendChild(d);
+});
+</script>
+</body>
+</html>

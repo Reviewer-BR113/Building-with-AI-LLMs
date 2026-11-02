@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI + LLMs · 06 Agentic Systems (Intro) — Lecture</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .vlbl{font-family:var(--mono);font-size:.68rem;color:var(--faint);letter-spacing:.05em;margin:18px 0 8px}
+  .stg{background:#0a0f18;border:1px solid var(--border-2);border-radius:12px;padding:16px}
+  .aloop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);font-size:.78rem}
+  .aln{border:1px solid var(--border-2);border-radius:10px;padding:12px 15px;background:var(--panel);opacity:.4;transition:all .25s;text-align:center}
+  .aln.on{opacity:1;border-color:var(--accent-2);color:var(--text)}
+  .aln.ans.on{border-color:var(--ok);color:var(--ok)}
+  .acirc{color:var(--faint);font-size:1.1rem}
+  .oneshot{font-family:var(--mono);font-size:.78rem;color:var(--muted);text-align:center;padding:10px;border:1px dashed var(--border-2);border-radius:9px;margin-bottom:12px}
+  .lnote{margin-top:12px;padding:10px 13px;border:1px dashed var(--border-2);border-radius:8px;font-family:var(--mono);font-size:.74rem;color:var(--muted);min-height:1.2em}
+  .hub{display:flex;flex-direction:column;align-items:center;gap:10px;font-family:var(--mono);font-size:.74rem}
+  .hubc{border:1px solid var(--accent-2);border-radius:11px;padding:11px 18px;background:rgba(167,139,250,.1);color:var(--accent-2);font-size:.9rem}
+  .spokes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .spoke{border:1px solid var(--border-2);border-radius:9px;padding:9px 12px;background:var(--panel);color:var(--muted);opacity:.35;transition:opacity .3s;text-align:center}
+  .spoke.on{opacity:1;border-color:var(--accent);color:var(--accent)}
+  .spoke .ic{font-size:1.1rem;display:block}
+  .mcpwrap{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:640px){.mcpwrap{grid-template-columns:1fr}}
+  .mcp{border:1px solid var(--border-2);border-radius:10px;padding:13px;font-family:var(--mono);font-size:.72rem;background:var(--panel)}
+  .mcp h5{font-family:var(--font);margin:0 0 8px;font-size:.82rem}
+  .mcp.before{border-color:rgba(248,113,113,.3)} .mcp.before h5{color:var(--bad)}
+  .mcp.after{border-color:rgba(52,211,153,.3)} .mcp.after h5{color:var(--ok)}
+  .mcp .wire{color:var(--faint);line-height:1.9}
+  .mcp .std{color:var(--accent-2)}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">AI + LLMs · 06 Agentic Systems</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="overview.html">Section overview</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv"><span class="n">Lesson 06</span> · 🤖 Building with AI</div>
+    <h1 class="rv d1">What is an <span class="grad">agent</span>?</h1>
+    <p class="lead rv d2">You've seen AI use tools. An <b>agentic system</b> is one that keeps going on its own — thinking, acting, and checking results in a loop until a goal is met. Let's see what makes it different from ordinary prompting.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>The loop</b><span>vs one-shot</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>Tool-connected</b><span>AI + tools + data</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>MCP</b><span>a standard plug</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>In action</b><span>the loop end-to-end</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 CONCEPT -->
+<section id="concept">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Idea</p>
+    <h2 class="rv">An agent runs itself, one step at a time</h2>
+    <p class="lead rv d1">A normal prompt is a single round trip: ask, get an answer, done. An <b>agent</b> is given a goal and then repeats a small cycle — <em>think, act, observe</em> — deciding its own next move each time, until the goal is reached. This intro keeps everything at the concept level; the details come later.</p>
+  </div>
+</section>
+
+<!-- 02 LOOP VS ONESHOT -->
+<section id="loop">
+  <div class="container">
+    <p class="eyebrow rv">02 · Agentic Loop vs One-Shot Prompting</p>
+    <h2 class="rv">One pass, or a cycle?</h2>
+    <p class="lead rv d1">One-shot prompting answers in a single pass — great for simple questions. An agent instead <b>loops</b>: it thinks about what to do, does it, observes the result, and decides whether it's done or needs another round.</p>
+    <div class="vlbl rv d2">▶ SEE THE LOOP TURN</div>
+    <div class="rv d2" id="loopViz">
+      <div class="stg" id="loopStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 TOOL-CONNECTED -->
+<section id="connected">
+  <div class="container">
+    <p class="eyebrow rv">03 · Tool-Connected AI</p>
+    <h2 class="rv">An agent is only as capable as its connections</h2>
+    <p class="lead rv d1">On its own, an LLM only knows its training and can only produce text. Connect it to <b>tools</b> (to act) and <b>data</b> (to know current, private facts), and it becomes far more capable. The connections are what turn a model into an agent.</p>
+    <div class="vlbl rv d2">▶ CONNECT THE AGENT</div>
+    <div class="rv d2" id="hubViz">
+      <div class="stg" id="hubStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 MCP -->
+<section id="mcp">
+  <div class="container">
+    <p class="eyebrow rv">04 · MCP — a Standard Plug (concept)</p>
+    <h2 class="rv">One protocol instead of custom wiring</h2>
+    <p class="lead rv d1">Connecting an AI to every tool with its own custom code gets messy fast. <b>MCP (Model Context Protocol)</b> is an open standard for these connections — a tool exposes an MCP interface once, and any MCP-compatible AI can use it. Think of it as <b>USB-C for AI tools</b>.</p>
+    <div class="vlbl rv d2">▶ BEFORE vs AFTER A STANDARD</div>
+    <div class="rv d2" id="mcpViz">
+      <div class="stg" id="mcpStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+    <div class="callout tip rv d2" style="margin-top:14px"><b>Concept only —</b> you don't need to build MCP to understand it. The idea that matters: <b>a shared standard lets tools and AIs connect without custom glue for every pair.</b></div>
+  </div>
+</section>
+
+<!-- 05 LOOP IN ACTION -->
+<section id="inaction">
+  <div class="container">
+    <p class="eyebrow rv">05 · The Loop, End-to-End</p>
+    <h2 class="rv">A real task, one cycle at a time</h2>
+    <p class="lead rv d1">Let's run the full agent loop on a real question: <em>"Is it going to rain in Paris this afternoon — should I take an umbrella?"</em> The model can't know today's weather, so it must act.</p>
+    <div class="vlbl rv d2">▶ RUN THE AGENT</div>
+    <div class="rv d2" id="actViz">
+      <div class="stg" id="actStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- WATCH OUT -->
+<section id="watch">
+  <div class="container">
+    <p class="eyebrow rv">06 · Keep in Mind</p>
+    <h2 class="rv">Agents are powerful — and slippery</h2>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card rv d1"><h3>🔁 Loops can run away</h3><p>An agent can get stuck repeating itself or wander off-task. Cap the number of steps.</p></div>
+      <div class="card rv d2"><h3>💸 Each step costs</h3><p>Every loop is another model call — more time and money than a single prompt.</p></div>
+      <div class="card rv d3"><h3>🔒 Real actions, real risk</h3><p>Tools that send email or change data need strict limits and approvals.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <div class="container">
+    <p class="eyebrow rv">07 · Check Your Understanding</p>
+    <h2 class="rv">Questions</h2>
+    <p class="lead rv d1">Click any question to reveal a plain-English answer.</p>
+    <div style="margin-top:24px;max-width:820px" id="accWrap"></div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">Recap</p>
+    <h2 class="rv">Summary</h2>
+    <div class="split top" style="margin-top:22px">
+      <div class="rv d1">
+        <div class="timeline">
+          <div class="tl-item"><span class="dot"></span><b>Loop vs one-shot</b><p>Agents repeat think → act → observe until the goal is met.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Tool-connected</b><p>Tools let it act; data lets it know — that's what makes an agent.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>MCP</b><p>A standard "plug" so tools and AIs connect without custom glue.</p></div>
+          <div class="tl-item"><span class="dot" style="border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12)"></span><b>In action</b><p>Goal → plan → tool → observe → answer.</p></div>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="grid" style="gap:12px">
+          <div class="card" style="padding:15px"><b>🔁 An agent loops toward a goal.</b></div>
+          <div class="card" style="padding:15px"><b>🔌 Connections make it capable.</b></div>
+          <div class="card" style="padding:15px"><b>🔗 MCP = USB-C for AI tools.</b></div>
+          <div class="card" style="padding:15px"><b>⚠️ Cap steps; guard real actions.</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="pager">
+  <a class="prev" href="05-ai-workflows.html"><span class="dir">← Previous</span><b>Automating Workflows</b></a>
+  <a class="next" href="07-ai-limitations.html"><span class="dir">Next lesson →</span><b>Real-World Limitations</b></a>
+</footer>
+<div class="footer">Mentoring · Building with AI + LLMs · 06 Agentic Systems (Intro)</div>
+<script src="../assets/app.js"></script>
+<script>
+function mkAlgo(vizId, stageId, frames, renderer){
+  var root=document.getElementById(vizId);
+  if(!root || !window.AlgoViz) return;
+  var stage=document.getElementById(stageId);
+  AlgoViz(root, frames.map(function(fr){ return {explain:fr.explain, apply:function(){ renderer(stage, fr); }}; }));
+}
+
+/* (a) loop vs one-shot */
+(function(){
+  function render(stage,fr){
+    var one= fr.showOne ? '<div class="oneshot">ONE-SHOT: 🗣️ Prompt → 💬 Answer &nbsp;(single pass, done)</div>' : '';
+    stage.innerHTML=one+
+      '<div class="aloop">'+
+      '<div class="aln'+(fr.node==="think"?' on':'')+'">🤔 Think<br><small>what next?</small></div>'+
+      '<span class="acirc">→</span>'+
+      '<div class="aln'+(fr.node==="act"?' on':'')+'">⚙️ Act<br><small>do it / use a tool</small></div>'+
+      '<span class="acirc">→</span>'+
+      '<div class="aln'+(fr.node==="observe"?' on':'')+'">👁️ Observe<br><small>check the result</small></div>'+
+      '<span class="acirc">↺</span>'+
+      '<div class="aln ans'+(fr.node==="answer"?' on':'')+'">✅ Answer<br><small>goal met</small></div>'+
+      '</div><div class="lnote">'+fr.note+'</div>';
+  }
+  mkAlgo("loopViz","loopStage",[
+    {showOne:true,node:"",note:"A one-shot prompt is a single pass: ask, answer, finished. Perfect when the question is simple.",explain:"<b>One-shot prompting</b> — one request, one answer. No follow-up, no tools mid-way. Great for direct questions."},
+    {showOne:false,node:"think",note:"An agent starts by THINKING about what to do next.",explain:"An <b>agent</b> works differently. Given a goal, it first <b>thinks</b>: what's my next step?"},
+    {showOne:false,node:"act",note:"Then it ACTS — performs the step, often by using a tool.",explain:"<b>Act</b> — it carries out the step it chose (e.g. call a tool)."},
+    {showOne:false,node:"observe",note:"Then it OBSERVES the result and asks: am I done, or loop again?",explain:"<b>Observe</b> — it looks at the result. If the goal isn't met, it loops back to Think (↺) and repeats."},
+    {showOne:false,node:"answer",note:"✅ When the goal is met, it stops and gives the final answer.",explain:"When observing shows the goal is complete, the agent exits the loop and <b>answers</b>. Think → act → observe, repeated, is the whole idea."}
+  ],render);
+})();
+
+/* (b) tool-connected hub */
+(function(){
+  var SP=[{ic:"🔎",n:"web search"},{ic:"🗄️",n:"database"},{ic:"📁",n:"your files"},{ic:"✉️",n:"email"}];
+  function render(stage,fr){
+    var spokes=SP.map(function(s,i){ return '<div class="spoke'+(i<fr.n?' on':'')+'"><span class="ic">'+s.ic+'</span>'+s.n+'</div>'; }).join("");
+    stage.innerHTML='<div class="hub"><div class="hubc">🧠 AI agent</div><div style="color:var(--faint)">↕ connected to ↕</div><div class="spokes">'+spokes+'</div></div>';
+  }
+  mkAlgo("hubViz","hubStage",[
+    {n:0,explain:"Alone, the AI only has its training and can only produce text. Let's connect it to the outside world."},
+    {n:1,explain:"Connect <b>web search</b> → now it can look up current information it was never trained on."},
+    {n:2,explain:"Connect a <b>database</b> → it can read live, private data (your users, orders, records)."},
+    {n:3,explain:"Connect <b>your files</b> → it can work with your documents."},
+    {n:4,explain:"Connect <b>email</b> → it can take real actions. Each connection expands what the agent can do — the model is the brain, the connections are its hands and senses."}
+  ],render);
+})();
+
+/* (c) MCP before/after */
+(function(){
+  function render(stage,fr){
+    var before=
+      '<div class="mcp before"><h5>❌ Without a standard</h5>'+
+      '<div class="wire">AI&nbsp;A ── custom code ── Tool 1<br>AI&nbsp;A ── custom code ── Tool 2<br>AI&nbsp;B ── custom code ── Tool 1<br>AI&nbsp;B ── custom code ── Tool 2</div>'+
+      '<div style="color:var(--bad);margin-top:8px">every AI × every tool = its own glue 😵</div></div>';
+    var after=
+      '<div class="mcp after"><h5>✅ With MCP</h5>'+
+      '<div class="wire">AI&nbsp;A ─┐<br>AI&nbsp;B ─┤── <span class="std">MCP</span> ──┬─ Tool 1<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ Tool 2</div>'+
+      '<div style="color:var(--ok);margin-top:8px">connect to the standard once, works with all 🎉</div></div>';
+    stage.innerHTML='<div class="mcpwrap">'+(fr.n>=1?before:'<div class="mcp before"><h5>❌ Without a standard</h5><div class="wire">…</div></div>')+(fr.n>=2?after:'<div class="mcp after" style="opacity:.35"><h5>✅ With MCP</h5><div class="wire">…</div></div>')+'</div>';
+  }
+  mkAlgo("mcpViz","mcpStage",[
+    {n:0,explain:"The problem: connecting AI apps to tools. Watch what happens as the number of each grows."},
+    {n:1,explain:"<b>Without a standard</b>, every AI needs custom code for every tool. 2 AIs × 2 tools = 4 integrations… and it explodes as you add more. Messy and repetitive."},
+    {n:2,explain:"<b>With MCP</b>, each tool and each AI implements <em>one</em> standard interface. Now anything connects to anything through the shared protocol — like USB-C replaced a drawer full of proprietary chargers."}
+  ],render);
+})();
+
+/* (d) loop in action */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="aloop">'+
+      '<div class="aln'+(fr.node==="goal"?' on':'')+'">🎯 Goal</div><span class="acirc">→</span>'+
+      '<div class="aln'+(fr.node==="think"?' on':'')+'">🤔 Think</div><span class="acirc">→</span>'+
+      '<div class="aln'+(fr.node==="act"?' on':'')+'">🌦️ Weather tool</div><span class="acirc">→</span>'+
+      '<div class="aln'+(fr.node==="observe"?' on':'')+'">👁️ Observe</div><span class="acirc">→</span>'+
+      '<div class="aln ans'+(fr.node==="answer"?' on':'')+'">✅ Answer</div>'+
+      '</div><div class="lnote">'+fr.note+'</div>';
+  }
+  mkAlgo("actViz","actStage",[
+    {node:"goal",note:'Goal: "Rain in Paris this afternoon? Umbrella or not?"',explain:"<b>Goal.</b> The agent is handed the question. It can't answer from training — today's weather isn't in there."},
+    {node:"think",note:'Think: "I need current weather for Paris → use the weather tool."',explain:"<b>Think.</b> The agent reasons about what it needs and plans to call the weather tool."},
+    {node:"act",note:'Act: weather( city = "Paris", when = "this afternoon" )',explain:"<b>Act.</b> It calls the weather tool with the right inputs."},
+    {node:"observe",note:'Observe: tool returns "80% chance of rain, 3pm".',explain:"<b>Observe.</b> The tool returns real data. The agent checks it: is the goal answerable now? Yes."},
+    {node:"answer",note:'✅ Answer: "Yes — 80% chance of rain this afternoon in Paris. Take an umbrella."',explain:"<b>Answer.</b> With the observed data, the agent gives a grounded, correct answer. Goal → think → act → observe → answer — the loop, in action."}
+  ],render);
+})();
+
+var QA=[
+  ["What makes a system 'agentic' rather than just a prompt?","A plain prompt does one pass — ask and answer. An agent is given a goal and runs a loop: it thinks about the next step, acts (often using a tool), observes the result, and repeats until the goal is met. It decides its own steps instead of answering once."],
+  ["What is the think–act–observe loop?","The core cycle of an agent: Think (decide the next step), Act (do it, e.g. call a tool), Observe (check the result), then either loop again or finish. Repeating this cycle lets an agent tackle tasks that a single prompt can't."],
+  ["Why does an agent need tools and data connections?","On its own an LLM only has its training knowledge and can only output text. Connecting it to tools lets it take actions, and connecting it to data lets it access current or private facts. Those connections are exactly what turn a model into a capable agent."],
+  ["What is MCP, in concept?","The Model Context Protocol — an open standard for connecting AI apps to tools and data sources. A tool implements the MCP interface once, and any MCP-compatible AI can use it, avoiding custom code for every AI-tool pair. It's often described as 'USB-C for AI tools.'"],
+  ["What problem does a standard like MCP solve?","Without a standard, every AI app needs bespoke integration code for every tool — the number of integrations explodes as you add more of either. A shared protocol means each side implements it once and they all interoperate, removing the custom glue."],
+  ["What are the main risks of agentic systems?","They can loop indefinitely or drift off-task (so you cap the number of steps), every step is another paid model call (cost and latency add up), and tools that take real actions can cause real damage — so risky actions need strict limits and human approval."]
+];
+var accWrap=document.getElementById("accWrap");
+QA.forEach(function(qa,i){
+  var d=document.createElement("details"); d.className="acc";
+  d.innerHTML='<summary><span class="q">Q'+(i+1)+'</span>'+qa[0]+'<span class="plus">+</span></summary><div class="ans">'+qa[1]+'</div>';
+  accWrap.appendChild(d);
+});
+</script>
+</body>
+</html>

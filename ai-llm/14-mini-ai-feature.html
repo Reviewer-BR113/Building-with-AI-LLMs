@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI + LLMs · 14 Capstone: A Mini AI Feature — Lecture</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .vlbl{font-family:var(--mono);font-size:.68rem;color:var(--faint);letter-spacing:.05em;margin:18px 0 8px}
+  .stg{background:#0a0f18;border:1px solid var(--border-2);border-radius:12px;padding:16px}
+  .steplist{display:flex;flex-direction:column;gap:6px}
+  .stp{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--border-2);border-radius:8px;background:var(--panel);font-family:var(--mono);font-size:.76rem;color:var(--muted);opacity:.35;transition:opacity .3s}
+  .stp.on{opacity:1}.stp.cur{border-color:var(--accent-2);color:var(--text)}
+  .stp .n{width:20px;height:20px;border-radius:50%;background:rgba(167,139,250,.18);color:var(--accent-2);display:grid;place-items:center;font-size:.64rem;flex:none}
+  .pipe{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;font-family:var(--mono);font-size:.72rem}
+  .pnode{flex:1;min-width:96px;border:1px solid var(--border-2);border-radius:9px;padding:10px;background:var(--panel);text-align:center;transition:opacity .25s,border-color .25s,background .25s;opacity:.35}
+  .pnode.on{opacity:1;border-color:var(--accent-2);background:rgba(167,139,250,.08)}
+  .pnode .ic{font-size:1.15rem}.pnode .t{margin-top:4px;color:var(--text);font-size:.64rem}
+  .parrow{display:flex;align-items:center;color:var(--faint)}
+  .payload{margin-top:14px;padding:11px 13px;border:1px dashed var(--accent-2);border-radius:8px;background:rgba(167,139,250,.05);font-family:var(--mono);font-size:.74rem;color:var(--muted);min-height:1.2em}
+  .payload b{color:var(--accent-2)}
+  .ui{border:1px solid var(--border-2);border-radius:11px;padding:14px;background:var(--panel)}
+  .ui .cust{font-size:.82rem;color:var(--muted);border-left:3px solid var(--accent-3);padding-left:10px;margin-bottom:12px}
+  .ui .btn2{display:inline-block;font-family:var(--mono);font-size:.74rem;padding:7px 13px;border-radius:8px;border:1px solid var(--accent-2);color:var(--accent-2);background:rgba(167,139,250,.08)}
+  .ui .sug{margin-top:10px;border:1px dashed var(--accent-2);border-radius:9px;padding:11px;font-size:.84rem;background:rgba(167,139,250,.04);line-height:1.5}
+  .ui .stlabel{font-family:var(--mono);font-size:.66rem;color:var(--faint);margin-top:8px}
+  .checks{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:.75rem}
+  .chk{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--border-2);border-radius:8px;background:var(--panel);opacity:.35;transition:opacity .3s}
+  .chk.on{opacity:1}.chk.pass{border-color:var(--ok);color:var(--ok)}.chk.fail{border-color:var(--bad);color:var(--bad)}
+  .chk .mk{width:18px;flex:none;text-align:center}
+  .vcmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:640px){.vcmp{grid-template-columns:1fr}}
+  .vbox{border:1px solid var(--border-2);border-radius:10px;padding:12px;font-size:.82rem;line-height:1.5;background:var(--panel);opacity:.4;transition:opacity .3s}
+  .vbox.on{opacity:1}
+  .vbox h5{font-family:var(--mono);margin:0 0 8px;font-size:.72rem}
+  .vbox.v1{border-color:rgba(251,191,36,.35)}.vbox.v1 h5{color:var(--warn)}
+  .vbox.v2{border-color:rgba(52,211,153,.35)}.vbox.v2 h5{color:var(--ok)}
+  .enote{margin-top:12px;padding:10px 13px;border:1px dashed var(--border-2);border-radius:8px;font-family:var(--mono);font-size:.74rem;color:var(--muted);min-height:1.2em}
+  .finale{border-radius:20px;padding:34px;text-align:center;border:1px solid var(--border-2);background:linear-gradient(180deg,rgba(167,139,250,.1),rgba(34,211,238,.07),transparent)}
+  .finale .lessons{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:16px}
+  .finale .lc{font-family:var(--mono);font-size:.62rem;padding:3px 8px;border-radius:999px;background:var(--panel-2);border:1px solid var(--border);color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">AI + LLMs · 14 Capstone</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="overview.html">Section overview</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv"><span class="n">Lesson 14</span> · 🎯 Capstone</div>
+    <h1 class="rv d1">Build a <span class="grad">mini AI feature</span></h1>
+    <p class="lead rv d2">Time to put it all together. We'll design one real feature — an <b>AI reply suggester</b> for support agents — and walk it end to end: design, prompt flow, UI, validation, and iteration. Every earlier lesson shows up here.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>Design</b><span>where AI fits</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>Prompt flow</b><span>grounded draft</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>UI &amp; safety</b><span>integrate + validate</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>Iterate</b><span>improve it</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 CONCEPT -->
+<section id="concept">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Capstone</p>
+    <h2 class="rv">One feature, everything you've learned</h2>
+    <p class="lead rv d1">The feature: in a support tool, a <b>"Suggest reply"</b> button that drafts a response to a customer using the company's help docs. It touches prompting (L2), integration (L3), a feature (L4), RAG (L11), limitations &amp; validation (L7, L9), and iteration. Let's build it — as pictures.</p>
+  </div>
+</section>
+
+<!-- 02 DESIGN -->
+<section id="design">
+  <div class="container">
+    <p class="eyebrow rv">02 · Design the Feature</p>
+    <h2 class="rv">Find the job, and where AI helps</h2>
+    <p class="lead rv d1">Good AI features start from a real problem, not "let's add AI." Pin down the job, decide the smallest place AI adds value, and keep a human in control.</p>
+    <div class="vlbl rv d2">▶ DESIGN DECISIONS</div>
+    <div class="rv d2" id="desViz">
+      <div class="stg" id="desStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 PROMPT FLOW -->
+<section id="promptflow">
+  <div class="container">
+    <p class="eyebrow rv">03 · Implement the Prompt Flow</p>
+    <h2 class="rv">A grounded draft, not a guess</h2>
+    <p class="lead rv d1">We don't just ask the model "reply to this." We retrieve the relevant help-doc chunks first (RAG, L11) and build a structured, grounded prompt (L2), so the draft is based on real policy — not invented.</p>
+    <div class="vlbl rv d2">▶ RUN THE PROMPT FLOW</div>
+    <div class="rv d2" id="flowViz">
+      <div class="stg" id="flowStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 UI -->
+<section id="ui">
+  <div class="container">
+    <p class="eyebrow rv">04 · Integrate Into the UI</p>
+    <h2 class="rv">Where the agent actually sees it</h2>
+    <p class="lead rv d1">The draft appears as a <b>suggestion the agent can edit</b> — never auto-sent. Clear states (idle → loading → suggestion → edit → send) keep the experience smooth and the human firmly in charge.</p>
+    <div class="vlbl rv d2">▶ THE FEATURE IN THE INBOX</div>
+    <div class="rv d2" id="uiViz">
+      <div class="stg" id="uiStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 VALIDATE -->
+<section id="validate">
+  <div class="container">
+    <p class="eyebrow rv">05 · Validate &amp; Handle Failures</p>
+    <h2 class="rv">Check the draft; plan for a miss</h2>
+    <p class="lead rv d1">Before showing a draft, run quick checks (L7, L9): is it grounded in a real doc? On-topic? No invented policy? And if the AI fails or is unsure, fall back gracefully — a blank template beats a wrong answer.</p>
+    <div class="vlbl rv d2">▶ CHECKS &amp; FALLBACK</div>
+    <div class="rv d2" id="valViz">
+      <div class="stg" id="valStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 ITERATE -->
+<section id="iterate">
+  <div class="container">
+    <p class="eyebrow rv">06 · Improve Through Iterations</p>
+    <h2 class="rv">Ship v1, watch, then make it better</h2>
+    <p class="lead rv d1">The first version is rarely the best. Watch how real agents use it, spot the weakness, adjust the prompt (or the flow), and ship v2. AI features improve by iteration, not by getting it perfect first try.</p>
+    <div class="vlbl rv d2">▶ FROM v1 TO v2</div>
+    <div class="rv d2" id="iterViz">
+      <div class="stg" id="iterStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <div class="container">
+    <p class="eyebrow rv">07 · Check Your Understanding</p>
+    <h2 class="rv">Questions</h2>
+    <p class="lead rv d1">Click any question to reveal a plain-English answer.</p>
+    <div style="margin-top:24px;max-width:820px" id="accWrap"></div>
+  </div>
+</section>
+
+<!-- SUMMARY / FINALE -->
+<section id="summary" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">Recap</p>
+    <h2 class="rv">The whole feature, in four moves</h2>
+    <div class="split top" style="margin-top:22px">
+      <div class="rv d1">
+        <div class="timeline">
+          <div class="tl-item"><span class="dot"></span><b>Design</b><p>Real job; AI drafts, human stays in control.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Prompt flow</b><p>Retrieve docs (RAG) → grounded, structured prompt.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>UI &amp; validation</b><p>Editable suggestion, clear states, checks + fallback.</p></div>
+          <div class="tl-item"><span class="dot" style="border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12)"></span><b>Iterate</b><p>Watch real use; refine; ship v2.</p></div>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="grid" style="gap:12px">
+          <div class="card" style="padding:15px"><b>🎯 Start from a real problem.</b></div>
+          <div class="card" style="padding:15px"><b>📚 Ground it (RAG) to stay accurate.</b></div>
+          <div class="card" style="padding:15px"><b>🧑 Keep the human in control.</b></div>
+          <div class="card" style="padding:15px"><b>🔁 Improve by iterating.</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="finale rv d3" style="margin-top:28px">
+      <h2 style="margin:0 0 8px">🎉 You've finished <span class="grad">Building with AI + LLMs</span></h2>
+      <p style="margin:0 auto;max-width:64ch;color:#c5d1e0">From what happens inside a single request to designing, grounding, securing, and shipping a real AI feature — you now understand how modern AI apps are built, and how to build one responsibly.</p>
+      <div class="lessons">
+        <span class="lc">01 How AI works</span><span class="lc">02 Prompts</span><span class="lc">03 Integration</span><span class="lc">04 Features</span><span class="lc">05 Workflows</span><span class="lc">06 Agents</span><span class="lc">07 Limitations</span><span class="lc">08 Optimizing</span><span class="lc">09 Validation</span><span class="lc">10 Embeddings</span><span class="lc">11 RAG</span><span class="lc">12 Tool calling</span><span class="lc">13 Security</span><span class="lc">14 Capstone</span>
+      </div>
+      <div class="btnrow" style="justify-content:center;margin-top:22px"><a class="btn" href="overview.html">Back to overview</a><a class="btn ghost" href="../index.html">All subjects</a></div>
+    </div>
+  </div>
+</section>
+
+<footer class="pager">
+  <a class="prev" href="13-prompt-injection-security.html"><span class="dir">← Previous</span><b>Prompt Injection &amp; Security</b></a>
+  <a class="next" href="overview.html"><span class="dir">Finish →</span><b>Section overview</b></a>
+</footer>
+<div class="footer">Mentoring · Building with AI + LLMs · 14 Capstone: A Mini AI Feature</div>
+<script src="../assets/app.js"></script>
+<script>
+function mkAlgo(vizId, stageId, frames, renderer){
+  var root=document.getElementById(vizId);
+  if(!root || !window.AlgoViz) return;
+  var stage=document.getElementById(stageId);
+  AlgoViz(root, frames.map(function(fr){ return {explain:fr.explain, apply:function(){ renderer(stage, fr); }}; }));
+}
+
+/* (a) design */
+(function(){
+  var S=["The job: agents spend hours writing similar replies","Where AI fits: draft a reply from the customer message + help docs","Human in control: the agent edits and sends — AI never auto-sends","Success = faster replies, agent stays accountable"];
+  function render(stage,fr){
+    var rows=S.map(function(s,i){ var c=i<fr.n?(i===fr.n-1?"cur":"on"):""; return '<div class="stp '+c+'"><span class="n">'+(i+1)+'</span>'+s+'</div>'; }).join("");
+    stage.innerHTML='<div class="steplist">'+rows+'</div>';
+  }
+  mkAlgo("desViz","desStage",[
+    {n:0,explain:"Design starts with the problem, not the technology."},
+    {n:1,explain:"<b>The job:</b> support agents rewrite the same kinds of replies all day. That's the pain worth solving."},
+    {n:2,explain:"<b>Where AI fits:</b> draft a suggested reply from the customer's message plus the help docs. A focused, high-value spot — not \"AI everywhere.\""},
+    {n:3,explain:"<b>Human in control:</b> the agent reviews, edits, and sends. The AI assists; it never sends on its own. This keeps quality and accountability with a person."},
+    {n:4,explain:"<b>Success</b> is clear: faster replies while the agent stays in charge. Now we know exactly what to build."}
+  ],render);
+})();
+
+/* (b) prompt flow */
+(function(){
+  var N=[{ic:"📩",t:"Customer msg"},{ic:"🔎",t:"Retrieve docs"},{ic:"🧩",t:"Grounded prompt"},{ic:"🧠",t:"LLM"},{ic:"📝",t:"Draft reply"}];
+  function render(stage,fr){
+    var html='<div class="pipe">';
+    N.forEach(function(n,i){
+      html+='<div class="pnode'+(i===fr.active?' on':'')+'"><div class="ic">'+n.ic+'</div><div class="t">'+n.t+'</div></div>';
+      if(i<N.length-1) html+='<div class="parrow">›</div>';
+    });
+    html+='</div><div class="payload">'+fr.payload+'</div>';
+    stage.innerHTML=html;
+  }
+  mkAlgo("flowViz","flowStage",[
+    {active:0,payload:'Customer: "Can I return shoes I bought 3 weeks ago?"',explain:"<b>Input.</b> The customer's message arrives in the agent's inbox."},
+    {active:1,payload:'RAG retrieves the closest help-doc chunk: "Returns accepted within 30 days…"',explain:"<b>Retrieve (RAG).</b> We search the help docs for relevant policy — so the reply is grounded in truth, not guessed."},
+    {active:2,payload:'Prompt = system role + retrieved policy + the customer message + "draft a friendly reply."',explain:"<b>Grounded prompt.</b> We assemble a structured prompt (L2) that includes the retrieved policy as context."},
+    {active:3,payload:'The model reads it all and generates a reply based on the supplied policy.',explain:"<b>Generate.</b> The model drafts a reply using the real policy text we handed it."},
+    {active:4,payload:'✅ Draft: "Yes! Since it\'s within our 30-day window, you can return them for a full refund…"',explain:"<b>Draft.</b> A grounded, on-policy suggestion — correct because it was built from your actual docs."}
+  ],render);
+})();
+
+/* (c) UI */
+(function(){
+  function render(stage,fr){
+    var body='';
+    if(fr.s==="idle") body='<div class="btn2">✨ Suggest reply</div><div class="stlabel">idle — agent can click when ready</div>';
+    else if(fr.s==="load") body='<div class="btn2" style="opacity:.6">⏳ Drafting…</div><div class="stlabel">loading — model is generating</div>';
+    else if(fr.s==="sug") body='<div class="sug">Yes! Since it\'s within our 30-day window, you can return them for a full refund. Here\'s how…</div><div class="stlabel">suggestion shown — editable</div>';
+    else if(fr.s==="edit") body='<div class="sug">Hi Sam! Good news — you\'re within our 30-day window, so a full refund is no problem. Here\'s how… <span style="color:var(--accent-2)">|</span></div><div class="stlabel">✏️ agent tweaks the wording</div>';
+    else body='<div class="sug" style="border-style:solid;border-color:var(--ok)">✅ Sent by the agent</div><div class="stlabel">📤 agent approved &amp; sent</div>';
+    stage.innerHTML='<div class="ui"><div class="cust">Customer: "Can I return shoes I bought 3 weeks ago?"</div>'+body+'</div>';
+  }
+  mkAlgo("uiViz","uiStage",[
+    {s:"idle",explain:"<b>Idle.</b> The agent sees the customer message and a \"Suggest reply\" button. They click when they want help."},
+    {s:"load",explain:"<b>Loading.</b> A clear \"Drafting…\" state (L3) — the agent knows the AI is working."},
+    {s:"sug",explain:"<b>Suggestion.</b> The draft appears as an <em>editable</em> suggestion — never auto-sent."},
+    {s:"edit",explain:"<b>Edit.</b> The agent personalizes it (adds the name, softens the tone). The human shapes the final message."},
+    {s:"sent",explain:"<b>Send.</b> The agent approves and sends. AI saved time; the person stayed in control and accountable."}
+  ],render);
+})();
+
+/* (d) validate + fallback */
+(function(){
+  var CHECKS=[{t:"Grounded in a real help-doc chunk?",pass:true},{t:"On-topic (a support reply)?",pass:true},{t:"No invented policy or promises?",pass:true}];
+  function render(stage,fr){
+    if(fr.mode==="fail"){
+      stage.innerHTML='<div class="enote" style="border-color:var(--bad)">⚠ The AI failed (timeout) or found no relevant doc.</div>'+
+        '<div class="chk on pass" style="margin-top:8px;border-color:var(--warn);color:var(--warn)"><span class="mk">🪂</span>Fallback: show a blank reply template so the agent is never blocked.</div>';
+      return;
+    }
+    var rows=CHECKS.map(function(c,i){ var cls="chk"+(i<fr.n?' on pass':''); return '<div class="'+cls+'"><span class="mk">'+(i<fr.n?'✓':'·')+'</span>'+c.t+'</div>'; }).join("");
+    stage.innerHTML='<div class="checks">'+rows+'</div>'+(fr.n>=3?'<div class="enote" style="border-color:var(--ok);color:var(--muted)">✅ All checks pass → safe to show the agent.</div>':'');
+  }
+  mkAlgo("valViz","valStage",[
+    {mode:"ok",n:0,explain:"Before the draft reaches the agent, it passes quick automatic checks (L7, L9)."},
+    {mode:"ok",n:1,explain:"<b>Grounded?</b> Confirm the reply was built from a retrieved doc — not a hallucination."},
+    {mode:"ok",n:2,explain:"<b>On-topic?</b> A guardrail confirms it's a support reply, not something off the rails."},
+    {mode:"ok",n:3,explain:"<b>No invented policy?</b> Check it doesn't promise anything the docs don't support. All clear → show it."},
+    {mode:"fail",n:0,explain:"<b>And when it fails?</b> Timeout, or no relevant doc found. Instead of a broken or wrong reply, we fall back to a blank template — the agent is never left stuck. Graceful degradation."}
+  ],render);
+})();
+
+/* (e) iterate */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="vcmp">'+
+      '<div class="vbox v1'+(fr.n>=1?' on':'')+'"><h5>v1 — shipped</h5>"Dear valued customer, we hereby acknowledge your inquiry regarding the return of merchandise…"<br><br>'+(fr.n>=2?'<span style="color:var(--warn)">👀 Agents rewrite it every time — too stiff.</span>':'')+'</div>'+
+      '<div class="vbox v2'+(fr.n>=3?' on':'')+'"><h5>v2 — after iterating</h5>'+(fr.n>=3?'"Hi! Good news — you\'re within our 30-day window, so a refund is easy. Here\'s how…"<br><br><span style="color:var(--ok)">✅ Warmer &amp; shorter — agents send it as-is.</span>':'…')+'</div>'+
+      '</div>'+(fr.note?'<div class="enote">'+fr.note+'</div>':'');
+  }
+  mkAlgo("iterViz","iterStage",[
+    {n:0,note:"Ship a first version, then learn from real use.",explain:"You won't nail it on try one — and that's fine. Ship v1 and observe."},
+    {n:1,note:"v1 is technically correct but stiff and formal.",explain:"<b>v1</b> works, but the tone is robotic and long-winded."},
+    {n:2,note:"Signal: agents rewrite it every time before sending.",explain:"<b>Observe.</b> The telltale sign it's not good enough — agents don't use it as-is; they rewrite it. That's your feedback."},
+    {n:3,note:"✅ Adjust the system prompt ('warm, concise, friendly') → v2 lands. Iterate, don't perfect up front.",explain:"<b>Iterate.</b> A small prompt change — ask for a warm, concise tone — produces a v2 agents actually send. This loop, repeated, is how AI features get good."}
+  ],render);
+})();
+
+var QA=[
+  ["How should you decide where to add AI to a product?","Start from a real problem, not the desire to 'use AI'. Find a specific, high-value job (like drafting repetitive replies), add AI at the smallest place it clearly helps, and keep a human in control of the outcome. AI should assist a real workflow, not be bolted on."],
+  ["Why ground the reply-drafting feature with RAG?","So drafts are based on the company's actual policies instead of the model's guesses. Retrieving the relevant help-doc chunk and putting it in the prompt keeps the reply accurate and current, and dramatically reduces the risk of the AI inventing a policy."],
+  ["Why show the draft as an editable suggestion instead of auto-sending?","Because the AI can be wrong, and sending is consequential. Presenting an editable suggestion keeps a human reviewing and accountable for every message, while still saving them most of the writing time. It's assistance, not automation of the final decision."],
+  ["What checks and fallbacks does the feature need?","Checks (L7/L9): is the draft grounded in a real doc, on-topic, and free of invented promises? Fallback: if the AI times out or finds no relevant document, show a blank template so the agent is never blocked — a graceful degradation rather than a broken or wrong reply."],
+  ["Why is iteration essential for AI features?","Because the first version rarely fits real usage. By shipping v1 and watching how people actually use it (e.g. agents rewriting every draft), you find the real weakness and fix it — often with a small prompt change. AI features improve through this observe-and-refine loop, not by trying to be perfect upfront."],
+  ["Which earlier concepts does this capstone combine?","Prompt design (L2), app integration and states (L3), building a feature (L4), RAG for grounding (L11), handling limitations and validation (L7, L9), guardrails (L7), and iteration. The mini feature is a small system that stitches many of the course's ideas together."]
+];
+var accWrap=document.getElementById("accWrap");
+QA.forEach(function(qa,i){
+  var d=document.createElement("details"); d.className="acc";
+  d.innerHTML='<summary><span class="q">Q'+(i+1)+'</span>'+qa[0]+'<span class="plus">+</span></summary><div class="ans">'+qa[1]+'</div>';
+  accWrap.appendChild(d);
+});
+</script>
+</body>
+</html>

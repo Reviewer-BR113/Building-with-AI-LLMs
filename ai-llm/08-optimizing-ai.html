@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI + LLMs · 08 Optimizing AI Usage — Lecture</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .vlbl{font-family:var(--mono);font-size:.68rem;color:var(--faint);letter-spacing:.05em;margin:18px 0 8px}
+  .stg{background:#0a0f18;border:1px solid var(--border-2);border-radius:12px;padding:16px}
+  .toks{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+  .tok{padding:4px 7px;border:1px solid var(--accent);border-radius:5px;background:rgba(34,211,238,.08);color:var(--accent);font-family:var(--mono);font-size:.72rem}
+  .plaintxt{font-family:var(--mono);font-size:.86rem;color:var(--text);margin-bottom:12px}
+  .meter{height:14px;border-radius:7px;background:var(--panel-2);overflow:hidden;border:1px solid var(--border-2)}
+  .meter i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0;transition:width .5s}
+  .mlabel{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:8px}
+  .mlabel b{color:var(--accent-2)}
+  .pcmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:640px){.pcmp{grid-template-columns:1fr}}
+  .pc{border:1px solid var(--border-2);border-radius:10px;padding:12px;font-family:var(--mono);font-size:.76rem;background:var(--panel);line-height:1.55}
+  .pc h5{font-family:var(--font);margin:0 0 8px;font-size:.8rem}
+  .pc.big{border-color:rgba(248,113,113,.3)} .pc.big h5{color:var(--bad)}
+  .pc.lean{border-color:rgba(52,211,153,.3)} .pc.lean h5{color:var(--ok)}
+  .pc .fill{color:var(--faint);text-decoration:line-through}
+  .models{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .mdl{flex:1;min-width:150px;border:1px solid var(--border-2);border-radius:11px;padding:14px;background:var(--panel);text-align:center;transition:all .25s;opacity:.5}
+  .mdl.pick{opacity:1;transform:translateY(-3px)}
+  .mdl.small.pick{border-color:var(--ok)} .mdl.large.pick{border-color:var(--accent-2)}
+  .mdl .ic{font-size:1.5rem} .mdl .nm{font-weight:700;margin:5px 0}
+  .mdl .d{font-family:var(--mono);font-size:.66rem;color:var(--faint);line-height:1.5}
+  .task{font-family:var(--mono);font-size:.78rem;color:var(--accent-2);text-align:center;margin-top:12px;min-height:1.2em}
+  .cache{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);font-size:.76rem}
+  .cn{border:1px solid var(--border-2);border-radius:10px;padding:11px 14px;background:var(--panel);text-align:center;opacity:.4;transition:all .25s}
+  .cn.on{opacity:1;border-color:var(--accent-2)}
+  .cn.hit.on{border-color:var(--ok);color:var(--ok)} .cn.miss.on{border-color:var(--warn);color:var(--warn)}
+  .car{color:var(--faint)}
+  .cnote{margin-top:12px;padding:10px 13px;border:1px dashed var(--border-2);border-radius:8px;font-family:var(--mono);font-size:.74rem;color:var(--muted);min-height:1.2em}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">AI + LLMs · 08 Optimizing AI Usage</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="overview.html">Section overview</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv"><span class="n">Lesson 08</span> · ⚡ Production-ready</div>
+    <h1 class="rv d1">Optimizing <span class="grad">AI usage</span></h1>
+    <p class="lead rv d2">Every AI call costs money and time. At scale that adds up fast. Optimizing means getting the same quality for fewer <b>tokens</b>, the right-sized model, and not paying twice for the same answer.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>Tokens</b><span>the unit of cost</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>Efficient prompts</b><span>less filler</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>Cost vs speed</b><span>pick the model</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>Caching</b><span>don't repeat work</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 CONCEPT -->
+<section id="concept">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Idea</p>
+    <h2 class="rv">You pay per word, both ways</h2>
+    <p class="lead rv d1">AI providers charge by the amount of text processed — the prompt you send <em>and</em> the response you get back. One call is cheap; a million calls a day is a bill. The good news: a few habits cut cost and latency dramatically without hurting quality.</p>
+  </div>
+</section>
+
+<!-- 02 TOKENS -->
+<section id="tokens">
+  <div class="container">
+    <p class="eyebrow rv">02 · Reduce Token Usage</p>
+    <h2 class="rv">Tokens are the unit of cost</h2>
+    <p class="lead rv d1">Models don't read words — they read <b>tokens</b>, small chunks of text (roughly ¾ of a word each). You're billed per token, for both input and output. Fewer tokens = lower cost and faster replies.</p>
+    <div class="vlbl rv d2">▶ SEE TEXT BECOME TOKENS</div>
+    <div class="rv d2" id="tokViz">
+      <div class="stg" id="tokStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 EFFICIENCY -->
+<section id="efficiency">
+  <div class="container">
+    <p class="eyebrow rv">03 · Improve Prompt Efficiency</p>
+    <h2 class="rv">Say the same thing in fewer tokens</h2>
+    <p class="lead rv d1">Polite padding and rambling instructions cost tokens without improving the answer. A lean, direct prompt often gets the <b>same result</b> for a fraction of the tokens. Trim the fat.</p>
+    <div class="vlbl rv d2">▶ TRIM A BLOATED PROMPT</div>
+    <div class="rv d2" id="effViz">
+      <div class="stg" id="effStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 COST VS PERF -->
+<section id="costperf">
+  <div class="container">
+    <p class="eyebrow rv">04 · Cost vs Performance</p>
+    <h2 class="rv">Don't use a sledgehammer for a nail</h2>
+    <p class="lead rv d1">Bigger models are smarter but slower and pricier; smaller ones are cheap and fast but less capable. The skill is <b>matching the model to the task</b> — a small model for easy jobs, a big one only when you truly need the extra brains.</p>
+    <div class="vlbl rv d2">▶ PICK THE RIGHT MODEL PER TASK</div>
+    <div class="rv d2" id="modelViz">
+      <div class="stg" id="modelStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 CACHING -->
+<section id="caching">
+  <div class="container">
+    <p class="eyebrow rv">05 · Response Caching</p>
+    <h2 class="rv">Never pay twice for the same answer</h2>
+    <p class="lead rv d1">If many users ask the same thing ("What's your refund policy?"), you don't need to call the model every time. <b>Cache</b> the first answer; serve later identical requests from the cache — instant and free.</p>
+    <div class="vlbl rv d2">▶ CACHE MISS, THEN CACHE HIT</div>
+    <div class="rv d2" id="cacheViz">
+      <div class="stg" id="cacheStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- WATCH OUT -->
+<section id="watch">
+  <div class="container">
+    <p class="eyebrow rv">06 · Keep in Mind</p>
+    <h2 class="rv">Optimize without over-optimizing</h2>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card rv d1"><h3>✂️ Trim, don't starve</h3><p>Cut filler, but keep the context the model needs to answer well.</p></div>
+      <div class="card rv d2"><h3>📊 Measure first</h3><p>Track token usage and cost before optimizing — fix the biggest spender.</p></div>
+      <div class="card rv d3"><h3>🗃️ Cache the stable</h3><p>Cache answers that don't change often; skip caching personalized ones.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <div class="container">
+    <p class="eyebrow rv">07 · Check Your Understanding</p>
+    <h2 class="rv">Questions</h2>
+    <p class="lead rv d1">Click any question to reveal a plain-English answer.</p>
+    <div style="margin-top:24px;max-width:820px" id="accWrap"></div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">Recap</p>
+    <h2 class="rv">Summary</h2>
+    <div class="split top" style="margin-top:22px">
+      <div class="rv d1">
+        <div class="timeline">
+          <div class="tl-item"><span class="dot"></span><b>Tokens</b><p>The billing unit — for input and output. Fewer = cheaper, faster.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Efficient prompts</b><p>Cut filler; same result for fewer tokens.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Cost vs performance</b><p>Match model size to the task's difficulty.</p></div>
+          <div class="tl-item"><span class="dot" style="border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12)"></span><b>Caching</b><p>Reuse answers to repeated questions — instant and free.</p></div>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="grid" style="gap:12px">
+          <div class="card" style="padding:15px"><b>🎟️ Tokens = cost. Fewer is cheaper.</b></div>
+          <div class="card" style="padding:15px"><b>✂️ Lean prompts, same result.</b></div>
+          <div class="card" style="padding:15px"><b>⚖️ Right-size the model.</b></div>
+          <div class="card" style="padding:15px"><b>🗃️ Cache repeated answers.</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="pager">
+  <a class="prev" href="07-ai-limitations.html"><span class="dir">← Previous</span><b>Real-World Limitations</b></a>
+  <a class="next" href="09-validating-outputs.html"><span class="dir">Next lesson →</span><b>Validating AI Outputs</b></a>
+</footer>
+<div class="footer">Mentoring · Building with AI + LLMs · 08 Optimizing AI Usage</div>
+<script src="../assets/app.js"></script>
+<script>
+function mkAlgo(vizId, stageId, frames, renderer){
+  var root=document.getElementById(vizId);
+  if(!root || !window.AlgoViz) return;
+  var stage=document.getElementById(stageId);
+  AlgoViz(root, frames.map(function(fr){ return {explain:fr.explain, apply:function(){ renderer(stage, fr); }}; }));
+}
+
+/* (a) tokens */
+(function(){
+  var TOKENS=["Un","believ","ably","good","coffee","!"];
+  function render(stage,fr){
+    var top = fr.n>=1
+      ? '<div class="toks">'+TOKENS.map(function(t){return '<span class="tok">'+t+'</span>';}).join("")+'</div>'
+      : '<div class="plaintxt">"Unbelievably good coffee!"</div>';
+    var w = fr.n>=2?60:(fr.n>=1?28:0);
+    stage.innerHTML=top+'<div class="meter"><i style="width:'+w+'%"></i></div>'+
+      '<div class="mlabel">'+fr.label+'</div>';
+  }
+  mkAlgo("tokViz","tokStage",[
+    {n:0,label:"A short phrase a user typed.",explain:"Here's a little phrase. To a human it's four words — but the model doesn't see words."},
+    {n:1,label:"→ <b>6 tokens</b>. Notice \"Unbelievably\" split into pieces; even the \"!\" is its own token.",explain:"The model breaks text into <b>tokens</b> — chunks of about ¾ of a word. Common words are one token; rarer ones split into several."},
+    {n:2,label:"You pay for <b>input tokens + output tokens</b>. Longer prompts and longer answers both cost more.",explain:"Billing is per token, in <em>both</em> directions. So a long system prompt re-sent every request, or a needlessly long answer, directly raises your cost and latency."}
+  ],render);
+})();
+
+/* (b) efficiency */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="pcmp">'+
+      '<div class="pc big"><h5>❌ Bloated (~40 tokens)</h5>'+
+      '<span class="'+(fr.n>=1?'fill':'')+'">Hello! I was wondering if you could possibly, when you get a chance, be so kind as to</span> summarize <span class="'+(fr.n>=1?'fill':'')+'">the following text for me please, thank you so much:</span></div>'+
+      (fr.n>=2?'<div class="pc lean"><h5>✅ Lean (~8 tokens)</h5>Summarize this text:</div>':'<div class="pc lean" style="opacity:.35"><h5>✅ Lean</h5>…</div>')+
+      '</div>'+(fr.note?'<div class="cnote" style="margin-top:12px">'+fr.note+'</div>':'');
+  }
+  mkAlgo("effViz","effStage",[
+    {n:0,note:"",explain:"A real prompt, padded with politeness and filler. The model doesn't need any of it to do the job."},
+    {n:1,note:"The struck-through words add tokens but zero value to the instruction.",explain:"Everything crossed out is <b>filler</b> — it costs tokens on every single call without changing the result."},
+    {n:2,note:"✅ Same instruction, ~80% fewer tokens. Multiply by millions of calls = real savings.",explain:"The lean version gives the <em>same</em> summary for a fraction of the tokens. At scale, trimming prompts like this is one of the biggest, easiest savings."}
+  ],render);
+})();
+
+/* (c) cost vs performance */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="models">'+
+      '<div class="mdl small'+(fr.pick==="small"?' pick':'')+'"><div class="ic">⚡</div><div class="nm">Small model</div><div class="d">cheap · fast<br>good for easy tasks</div></div>'+
+      '<div class="mdl large'+(fr.pick==="large"?' pick':'')+'"><div class="ic">🧠</div><div class="nm">Large model</div><div class="d">pricey · slower<br>best for hard tasks</div></div>'+
+      '</div><div class="task">'+fr.task+'</div>';
+  }
+  mkAlgo("modelViz","modelStage",[
+    {pick:"",task:"Two models available. Which to use? It depends on the task.",explain:"You usually have a choice of models. Bigger isn't always better — it's about fit."},
+    {pick:"small",task:'Task: "Is this review positive or negative?" → ⚡ small model is plenty',explain:"A simple classification. A <b>small model</b> nails it cheaply and fast — using a big model here just wastes money."},
+    {pick:"large",task:'Task: "Analyze this contract for risky clauses." → 🧠 large model',explain:"Complex reasoning over nuanced text. Here the <b>large model's</b> extra capability is worth the cost. Match the tool to the difficulty."},
+    {pick:"",task:"Rule of thumb: default to the smallest model that does the job well.",explain:"A common pattern: use a cheap model for the bulk of easy work, and reserve the expensive model for the hard cases only."}
+  ],render);
+})();
+
+/* (d) caching */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="cache">'+
+      '<div class="cn'+(fr.n>=1?' on':'')+'">❓ "Refund policy?"</div>'+
+      '<span class="car">→</span>'+
+      '<div class="cn'+(fr.n>=2?' on':'')+(fr.hit?' hit':(fr.n>=2?' miss':''))+'">🗃️ Cache<br><small>'+(fr.hit?'HIT ✅':(fr.n>=2?'MISS':'check'))+'</small></div>'+
+      '<span class="car">→</span>'+
+      (fr.hit
+        ? '<div class="cn hit on">⚡ Instant · $0</div>'
+        : '<div class="cn'+(fr.n>=3?' on':'')+'">🧠 Call LLM<br><small>~2s · costs tokens</small></div>')+
+      '</div><div class="cnote">'+fr.note+'</div>';
+  }
+  mkAlgo("cacheViz","cacheStage",[
+    {n:1,hit:false,note:'First user asks a common question.',explain:"A user asks \"What's your refund policy?\" — a question many users ask identically."},
+    {n:2,hit:false,note:'The cache is empty for this question → MISS.',explain:"The app first checks the <b>cache</b>. Nothing stored yet — a <b>miss</b>."},
+    {n:3,hit:false,note:'So it calls the LLM (~2s, costs tokens) and stores the answer in the cache.',explain:"On a miss, it calls the model, pays for it, waits ~2s — then <b>saves</b> the answer keyed to that question."},
+    {n:3,hit:true,note:'✅ Next user asks the SAME question → cache HIT → served instantly, $0, no model call.',explain:"When the same question comes again, the cache <b>hits</b>: the stored answer is returned instantly and free. Cache common, stable questions to save time and money."}
+  ],render);
+})();
+
+var QA=[
+  ["What is a token, and why does it matter?","A token is a small chunk of text (about ¾ of a word) — the unit models actually process. It matters because AI providers bill per token, for both the prompt you send and the response you get. Fewer tokens means lower cost and faster responses."],
+  ["How do you reduce token usage?","Send less unnecessary text: trim filler and padding from prompts, keep system prompts tight (they're re-sent every call), ask for concise output, and only include the context the model truly needs. Smaller inputs and outputs both cut cost and latency."],
+  ["How can a prompt be more efficient without losing quality?","By removing words that don't change the instruction — politeness padding, rambling preambles, redundant explanation. A lean, direct prompt usually produces the same result as a bloated one, for a fraction of the tokens. At scale that's a major saving."],
+  ["How do you balance cost and performance?","Match the model to the task. Small models are cheap and fast but less capable; large models are pricier and slower but handle hard problems. Use the smallest model that does the job well, and reserve the expensive one for genuinely difficult tasks."],
+  ["What is response caching and when should you use it?","Storing an answer so identical future requests can be served from the cache instead of calling the model again — instant and free. It's ideal for common, stable questions (like a refund policy) that many users ask the same way. Avoid caching personalized or fast-changing answers."],
+  ["What's the right approach to optimization overall?","Measure first — track token usage and cost to find the biggest spender — then optimize that: trim prompts, right-size the model, and cache repeated answers. Optimize without starving the model of the context it needs to stay accurate."]
+];
+var accWrap=document.getElementById("accWrap");
+QA.forEach(function(qa,i){
+  var d=document.createElement("details"); d.className="acc";
+  d.innerHTML='<summary><span class="q">Q'+(i+1)+'</span>'+qa[0]+'<span class="plus">+</span></summary><div class="ans">'+qa[1]+'</div>';
+  accWrap.appendChild(d);
+});
+</script>
+</body>
+</html>

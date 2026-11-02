@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building with AI + LLMs — Overview</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .phase-lbl{display:flex;align-items:center;gap:12px;margin:34px 0 6px}
+  .phase-lbl .pn{font-family:var(--mono);font-size:.72rem;color:var(--accent-2);border:1px solid rgba(167,139,250,.35);border-radius:999px;padding:3px 10px}
+  .phase-lbl h3{margin:0;font-size:1.05rem}
+  .phase-lbl .ln{flex:1;height:1px;background:var(--border)}
+  .topic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:14px}
+  .tcard{display:block;background:var(--panel);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:16px;padding:18px;transition:transform .25s,border-color .25s,background .25s;position:relative;overflow:hidden}
+  .tcard::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(var(--accent-2),var(--accent));opacity:0;transition:opacity .25s}
+  .tcard:hover{transform:translateY(-4px);border-color:var(--border-2);background:var(--panel-2)}
+  .tcard:hover::before{opacity:1}
+  .tc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .tc-ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:1.2rem;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.22)}
+  .tc-no{font-family:var(--mono);font-size:.7rem;color:var(--faint)}
+  .tc-tag{font-family:var(--mono);font-size:.58rem;padding:3px 8px;border-radius:999px;background:rgba(52,211,153,.16);color:var(--ok)}
+  .tcard h4{margin:0 0 7px;font-size:1rem}
+  .tcard p{margin:0 0 11px;font-size:.82rem;color:var(--muted);line-height:1.5}
+  .tc-chips{display:flex;flex-wrap:wrap;gap:5px}
+  .tc-chip{font-family:var(--mono);font-size:.63rem;padding:3px 7px;border-radius:6px;background:var(--panel-2);border:1px solid var(--border);color:var(--muted)}
+  .tc-go{margin-top:10px;font-family:var(--mono);font-size:.72rem;color:var(--accent-2);opacity:0;transition:opacity .2s}
+  .tcard:hover .tc-go{opacity:1}
+  .roadmap-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px}
+  .rstep{font-family:var(--mono);font-size:.78rem;padding:9px 13px;border-radius:10px;background:var(--panel);border:1px solid var(--border);color:var(--muted);opacity:.4;transform:scale(.97);transition:all .4s}
+  .rstep.lit{opacity:1;transform:none;color:var(--text);border-color:var(--accent-2);background:rgba(167,139,250,.1)}
+  .rstep.goal.lit{border-color:var(--accent);background:rgba(34,211,238,.1)}
+  .rarrow{color:var(--faint);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">Building with AI + LLMs</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="#topics">Lessons ↓</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv">Lecture Session · Building with AI + LLMs</div>
+    <h1 class="rv d1">Understand &amp; build with <span class="grad">AI</span></h1>
+    <p class="lead rv d2">A beginner-friendly, <b>animation-first</b> tour of how large language models actually work and how to build real features with them — from what happens inside a request, to prompting, integration, agents, and shipping safely. No code, just clear pictures.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>See inside</b><span>how a request flows</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>Prompt well</b><span>&amp; integrate LLMs</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>Build features</b><span>&amp; agentic workflows</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>Ship safely</b><span>limits, cost, validation</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- INTRO -->
+<section id="intro">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Idea</p>
+    <h2 class="rv">What this course is about</h2>
+    <p class="lead rv d1">AI can feel like magic — text goes in, an answer comes out. This course opens the box. You'll <b>watch</b> what happens between input and answer, learn to steer it with good prompts, wire it into an app, extend it with tools and agents, and handle the messy realities (wrong answers, cost, validation). Every idea is carried by an animation you can step through.</p>
+    <div class="chips rv d1" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;margin-top:16px">
+      <span class="tc-chip">🔍 How it works</span><span class="tc-chip">✍️ Prompts</span><span class="tc-chip">🔌 Integration</span>
+      <span class="tc-chip">✨ AI features</span><span class="tc-chip">🤖 Agents &amp; MCP</span><span class="tc-chip">⚠️ Limitations</span><span class="tc-chip">✅ Validation</span>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="container">
+    <p class="eyebrow rv">02 · The Arc</p>
+    <h2 class="rv">From "how it works" to a shipped feature</h2>
+    <div class="rv d1" style="margin-top:26px" data-run="road">
+      <div class="roadmap-h">
+        <span class="rstep" data-r>Understand</span><span class="rarrow">→</span>
+        <span class="rstep" data-r>Prompt</span><span class="rarrow">→</span>
+        <span class="rstep" data-r>Integrate</span><span class="rarrow">→</span>
+        <span class="rstep" data-r>Build features</span><span class="rarrow">→</span>
+        <span class="rstep" data-r>Add agents</span><span class="rarrow">→</span>
+        <span class="rstep goal" data-r>Ship safely</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOPIC CARDS -->
+<section id="topics" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">03 · The 14 Lessons</p>
+    <h2 class="rv">Everything in this track</h2>
+    <p class="lead rv d1">Foundations, then building, then production-ready, then advanced patterns — capped by a hands-on capstone.</p>
+
+    <div class="phase-lbl rv"><span class="pn">Phase 1</span><h3>Foundations</h3><span class="ln"></span></div>
+    <div class="topic-grid">
+      <a class="tcard rv" href="01-how-ai-works.html">
+        <div class="tc-head"><span class="tc-ic">🔍</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">01</span><h4>How AI Works Internally</h4>
+        <p>Watch a request travel: input → processing → LLM → response. Prompt wrapping (system + user + hidden), and how context &amp; memory are injected.</p>
+        <div class="tc-chips"><span class="tc-chip">request flow</span><span class="tc-chip">prompt wrapping</span><span class="tc-chip">memory</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+      <a class="tcard rv" href="02-designing-prompts.html">
+        <div class="tc-head"><span class="tc-ic">✍️</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">02</span><h4>Designing Prompts</h4>
+        <p>User vs system prompts, reusable prompt templates, structuring for consistent outputs, and multi-step prompt pipelines.</p>
+        <div class="tc-chips"><span class="tc-chip">system prompt</span><span class="tc-chip">templates</span><span class="tc-chip">pipelines</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+      <a class="tcard rv" href="03-integrating-llms.html">
+        <div class="tc-head"><span class="tc-ic">🔌</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">03</span><h4>Integrating LLMs into Apps</h4>
+        <p>The frontend → backend → LLM → response loop, API-based integration, managing input/output, and shaping responses for the UI.</p>
+        <div class="tc-chips"><span class="tc-chip">frontend↔backend</span><span class="tc-chip">API</span><span class="tc-chip">UI</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+    </div>
+
+    <div class="phase-lbl rv"><span class="pn">Phase 2</span><h3>Building with AI</h3><span class="ln"></span></div>
+    <div class="topic-grid">
+      <a class="tcard rv" href="04-ai-features.html">
+        <div class="tc-head"><span class="tc-ic">✨</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">04</span><h4>AI-Powered Features</h4>
+        <p>The building blocks: text generation, smart input / auto-complete, AI-assisted (meaning-based) search, and content generation.</p>
+        <div class="tc-chips"><span class="tc-chip">text gen</span><span class="tc-chip">autocomplete</span><span class="tc-chip">AI search</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+      <a class="tcard rv" href="05-ai-workflows.html">
+        <div class="tc-head"><span class="tc-ic">🔗</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">05</span><h4>Automating Workflows</h4>
+        <p>Agentic thinking: break a task into steps, chain prompts across them, and let AI use tools to get work done.</p>
+        <div class="tc-chips"><span class="tc-chip">multi-step</span><span class="tc-chip">chaining</span><span class="tc-chip">tools</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+      <a class="tcard rv" href="06-agentic-systems.html">
+        <div class="tc-head"><span class="tc-ic">🤖</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">06</span><h4>Agentic Systems (Intro)</h4>
+        <p>Agentic loops vs one-shot prompting, tool-connected AI, and the idea behind MCP (Model Context Protocol) — concept only.</p>
+        <div class="tc-chips"><span class="tc-chip">agent loop</span><span class="tc-chip">MCP</span><span class="tc-chip">tools+data</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+    </div>
+
+    <div class="phase-lbl rv"><span class="pn">Phase 3</span><h3>Production-ready</h3><span class="ln"></span></div>
+    <div class="topic-grid">
+      <a class="tcard rv" href="07-ai-limitations.html">
+        <div class="tc-head"><span class="tc-ic">⚠️</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">07</span><h4>Real-World Limitations</h4>
+        <p>Hallucination in production, validating outputs before use, adding constraints &amp; guardrails, and fallback strategies.</p>
+        <div class="tc-chips"><span class="tc-chip">hallucination</span><span class="tc-chip">guardrails</span><span class="tc-chip">fallbacks</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+      <a class="tcard rv" href="08-optimizing-ai.html">
+        <div class="tc-head"><span class="tc-ic">⚡</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">08</span><h4>Optimizing AI Usage</h4>
+        <p>Reduce token usage, write efficient prompts, balance cost vs performance, and cache responses to save time and money.</p>
+        <div class="tc-chips"><span class="tc-chip">tokens</span><span class="tc-chip">cost</span><span class="tc-chip">caching</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+      <a class="tcard rv" href="09-validating-outputs.html">
+        <div class="tc-head"><span class="tc-ic">✅</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">09</span><h4>Validating AI Outputs</h4>
+        <p>A testing mindset: never trust blindly, validate results with logic or test cases, and spot incorrect or inconsistent answers.</p>
+        <div class="tc-chips"><span class="tc-chip">don't trust</span><span class="tc-chip">test cases</span><span class="tc-chip">consistency</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+    </div>
+
+    <div class="phase-lbl rv"><span class="pn">Phase 4</span><h3>Going deeper — advanced patterns</h3><span class="ln"></span></div>
+    <div class="topic-grid">
+      <a class="tcard rv" href="10-embeddings-vectors.html">
+        <div class="tc-head"><span class="tc-ic">📊</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">10</span><h4>Embeddings &amp; Vector Search</h4>
+        <p>How AI turns meaning into numbers — points in space — so it can find similar things. The engine behind semantic search and RAG.</p>
+        <div class="tc-chips"><span class="tc-chip">embeddings</span><span class="tc-chip">vectors</span><span class="tc-chip">similarity</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+      <a class="tcard rv" href="11-rag.html">
+        <div class="tc-head"><span class="tc-ic">📚</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">11</span><h4>RAG — Answer from Your Data</h4>
+        <p>Make AI answer from your own documents instead of just its training: retrieve the relevant pieces, inject them, and get a grounded answer.</p>
+        <div class="tc-chips"><span class="tc-chip">retrieval</span><span class="tc-chip">grounding</span><span class="tc-chip">your docs</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+      <a class="tcard rv" href="12-tool-calling.html">
+        <div class="tc-head"><span class="tc-ic">🛠️</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">12</span><h4>Tool &amp; Function Calling</h4>
+        <p>How a model reliably calls real functions with structured inputs — check weather, query a database, book a slot. The backbone of serious agents.</p>
+        <div class="tc-chips"><span class="tc-chip">functions</span><span class="tc-chip">structured args</span><span class="tc-chip">agents</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+      <a class="tcard rv" href="13-prompt-injection-security.html">
+        <div class="tc-head"><span class="tc-ic">🛡️</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">13</span><h4>Prompt Injection &amp; Security</h4>
+        <p>How attackers try to hijack an AI with malicious input — and how to defend with guardrails, separation, and least privilege. Essential before production.</p>
+        <div class="tc-chips"><span class="tc-chip">attacks</span><span class="tc-chip">guardrails</span><span class="tc-chip">defense</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+    </div>
+
+    <div class="phase-lbl rv"><span class="pn">Capstone</span><h3>Bring it all together</h3><span class="ln"></span></div>
+    <div class="topic-grid">
+      <a class="tcard rv" href="14-mini-ai-feature.html">
+        <div class="tc-head"><span class="tc-ic">🎯</span><span class="tc-tag">Ready</span></div>
+        <span class="tc-no">14</span><h4>Capstone: A Mini AI Feature</h4>
+        <p>Put it all together — design a feature, build its prompt flow, wire it into the UI, validate &amp; handle failures, and improve through iterations.</p>
+        <div class="tc-chips"><span class="tc-chip">design</span><span class="tc-chip">build</span><span class="tc-chip">iterate</span></div>
+        <div class="tc-go">Open lesson →</div>
+      </a>
+    </div>
+
+    <div class="rv" style="border-radius:20px;padding:32px;text-align:center;margin-top:40px;border:1px solid var(--border-2);background:linear-gradient(180deg,rgba(167,139,250,.08),rgba(34,211,238,.06),transparent)">
+      <h2 style="margin:0 0 8px">See it, then build it</h2>
+      <p style="margin:0 auto;max-width:60ch;color:#c5d1e0">No prior AI experience needed. Start with Lesson 01 and watch what really happens inside a model — by the end you'll understand the whole pipeline and how to build a real AI feature on top of it.</p>
+      <div class="btnrow" style="justify-content:center;margin-top:22px"><a class="btn" href="01-how-ai-works.html">Start Lesson 01 →</a><a class="btn ghost" href="../index.html">All subjects</a></div>
+    </div>
+  </div>
+</section>
+
+<div class="footer">Mentoring · Building with AI + LLMs</div>
+<script src="../assets/app.js"></script>
+<script>
+/* roadmap reveal */
+SQLViz.register("road", function(el){
+  var s=el.querySelectorAll("[data-r]"), reduce=SQLViz.reduce, t=SQLViz.timers(el);
+  s.forEach(function(x){ x.classList.remove("lit"); });
+  if(reduce){ s.forEach(function(x){ x.classList.add("lit"); }); return; }
+  s.forEach(function(x,i){ t.push(setTimeout(function(){ x.classList.add("lit"); }, 240*i+250)); });
+});
+</script>
+</body>
+</html>

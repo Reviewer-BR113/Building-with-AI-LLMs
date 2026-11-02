@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI + LLMs · 12 Tool &amp; Function Calling — Lecture</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .vlbl{font-family:var(--mono);font-size:.68rem;color:var(--faint);letter-spacing:.05em;margin:18px 0 8px}
+  .stg{background:#0a0f18;border:1px solid var(--border-2);border-radius:12px;padding:16px}
+  .qb{font-family:var(--mono);font-size:.78rem;color:var(--accent-2);border:1px solid var(--accent-2);border-radius:8px;padding:9px 12px;background:rgba(167,139,250,.06);margin-bottom:12px}
+  .callobj{font-family:var(--mono);font-size:.82rem;border:1px solid var(--accent);border-radius:9px;padding:12px 14px;background:rgba(34,211,238,.05);color:var(--accent);opacity:.35;transition:opacity .3s;white-space:pre-wrap}
+  .callobj.on{opacity:1}
+  .callobj .k{color:var(--accent-2)} .callobj .v{color:#7ee787}
+  .enote{margin-top:12px;padding:10px 13px;border:1px dashed var(--border-2);border-radius:8px;font-family:var(--mono);font-size:.74rem;color:var(--muted);min-height:1.2em}
+  .rt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);font-size:.72rem}
+  .rn{border:1px solid var(--border-2);border-radius:9px;padding:10px 12px;background:var(--panel);text-align:center;opacity:.4;transition:all .25s;min-width:80px}
+  .rn.on{opacity:1;border-color:var(--accent-2)}
+  .rn.call.on{border-color:var(--accent)} .rn.run.on{border-color:var(--accent-3)} .rn.ans.on{border-color:var(--ok)}
+  .rar{color:var(--faint)}
+  .menu{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:.74rem}
+  .mitem{padding:9px 12px;border:1px solid var(--border-2);border-radius:8px;background:var(--panel);color:var(--muted);opacity:.4;transition:all .3s}
+  .mitem.on{opacity:1} .mitem.pick{border-color:var(--accent);color:var(--accent);background:rgba(34,211,238,.06)}
+  .mitem .fn{color:var(--accent-2)}
+  .cmp2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+  @media (max-width:640px){.cmp2{grid-template-columns:1fr}}
+  .cbox{border-radius:10px;padding:13px;border:1px solid var(--border);font-family:var(--mono);font-size:.76rem;line-height:1.5}
+  .cbox h5{font-family:var(--font);margin:0 0 8px;font-size:.8rem}
+  .cbox.bad{border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.05)}
+  .cbox.good{border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.05)}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">AI + LLMs · 12 Tool &amp; Function Calling</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="overview.html">Section overview</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv"><span class="n">Lesson 12</span> · 🛠️ Going Deeper</div>
+    <h1 class="rv d1">Tool &amp; <span class="grad">function calling</span></h1>
+    <p class="lead rv d2">In Lesson 05 an agent "used a tool." Here's how that works reliably: the model doesn't act itself — it outputs a <b>structured request</b> saying which function to run and with what inputs. Your app runs it and hands back the result.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>Structured calls</b><span>not prose</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>The round trip</b><span>call → run → answer</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>Tool definitions</b><span>the menu</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>Reliable</b><span>parseable &amp; safe</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 CONCEPT -->
+<section id="concept">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Idea</p>
+    <h2 class="rv">The model asks; your code acts</h2>
+    <p class="lead rv d1">A model can't actually check the weather or book a table — it only produces text. Function calling turns that text into <b>action</b>: the model emits a precise, machine-readable request ("call <code>bookTable</code> with these values"), and your trusted code carries it out. The model decides <em>what</em> to do; your app decides <em>whether and how</em>.</p>
+  </div>
+</section>
+
+<!-- 02 STRUCTURED CALL -->
+<section id="structured">
+  <div class="container">
+    <p class="eyebrow rv">02 · A Structured Call, Not Prose</p>
+    <h2 class="rv">From a sentence to a precise request</h2>
+    <p class="lead rv d1">The key shift: instead of replying "Sure, I'll book that!", the model outputs a <b>structured object</b> naming the function and its arguments — something your code can execute without guessing.</p>
+    <div class="vlbl rv d2">▶ SENTENCE → STRUCTURED CALL</div>
+    <div class="rv d2" id="callViz">
+      <div class="stg" id="callStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 ROUND TRIP -->
+<section id="roundtrip">
+  <div class="container">
+    <p class="eyebrow rv">03 · The Round Trip</p>
+    <h2 class="rv">Call → run → result → answer</h2>
+    <p class="lead rv d1">The model's structured call goes to your app, which runs the real function and returns the result. The model then turns that result into a friendly reply. Note: the model never runs anything itself — your code is always in the middle.</p>
+    <div class="vlbl rv d2">▶ FOLLOW THE FULL TRIP</div>
+    <div class="rv d2" id="rtViz">
+      <div class="stg" id="rtStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 TOOL MENU -->
+<section id="menu">
+  <div class="container">
+    <p class="eyebrow rv">04 · Tool Definitions — the Menu</p>
+    <h2 class="rv">You tell the model what's available</h2>
+    <p class="lead rv d1">You give the model a <b>menu</b> of functions it may call — each with a name, a description, and its expected inputs. The model reads the request, picks the matching tool, and fills in the arguments. It can only call what you offer.</p>
+    <div class="vlbl rv d2">▶ THE MODEL PICKS FROM THE MENU</div>
+    <div class="rv d2" id="menuViz">
+      <div class="stg" id="menuStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 RELIABILITY -->
+<section id="reliable">
+  <div class="container">
+    <p class="eyebrow rv">05 · Why Structured Beats Free Text</p>
+    <h2 class="rv">Machine-readable means checkable</h2>
+    <p class="lead rv d1">A structured call can be <b>parsed and validated</b> before you act — right function? valid arguments? allowed? Free-text intentions can't be executed safely. Structure is what makes tool use dependable instead of a guessing game.</p>
+    <div class="cmp2 rv d1">
+      <div class="cbox bad"><h5>❌ Free text</h5>"Sure, I'll book a table for you!"<br><br><span style="color:var(--faint)">Your code can't act on this — no function, no values, nothing to run or check.</span></div>
+      <div class="cbox good"><h5>✅ Structured call</h5>bookTable(party: 2, time: "19:00")<br><br><span style="color:var(--faint)">Parseable, validatable, executable — the app knows exactly what to do.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- WATCH OUT -->
+<section id="watch">
+  <div class="container">
+    <p class="eyebrow rv">06 · Keep in Mind</p>
+    <h2 class="rv">Calling tools safely</h2>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card rv d1"><h3>✅ Validate the call</h3><p>Check the function and arguments before running — the model can still pick wrong.</p></div>
+      <div class="card rv d2"><h3>🔒 Least privilege</h3><p>Only expose safe tools. A "delete everything" function should never be on the menu.</p></div>
+      <div class="card rv d3"><h3>🙋 Confirm risky actions</h3><p>For anything costly or irreversible, require human approval before executing.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <div class="container">
+    <p class="eyebrow rv">07 · Check Your Understanding</p>
+    <h2 class="rv">Questions</h2>
+    <p class="lead rv d1">Click any question to reveal a plain-English answer.</p>
+    <div style="margin-top:24px;max-width:820px" id="accWrap"></div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">Recap</p>
+    <h2 class="rv">Summary</h2>
+    <div class="split top" style="margin-top:22px">
+      <div class="rv d1">
+        <div class="timeline">
+          <div class="tl-item"><span class="dot"></span><b>Structured call</b><p>The model outputs a function name + arguments, not prose.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Round trip</b><p>Model calls → your app runs it → model answers with the result.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Tool menu</b><p>You define what functions exist; it can only call those.</p></div>
+          <div class="tl-item"><span class="dot" style="border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12)"></span><b>Reliable &amp; safe</b><p>Structured = parseable, validatable; validate before running.</p></div>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="grid" style="gap:12px">
+          <div class="card" style="padding:15px"><b>📞 The model requests; code acts.</b></div>
+          <div class="card" style="padding:15px"><b>🧾 Structured args, not sentences.</b></div>
+          <div class="card" style="padding:15px"><b>📋 It can only call your menu.</b></div>
+          <div class="card" style="padding:15px"><b>🔒 Validate &amp; least-privilege.</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="pager">
+  <a class="prev" href="11-rag.html"><span class="dir">← Previous</span><b>RAG — Answer from Your Data</b></a>
+  <a class="next" href="13-prompt-injection-security.html"><span class="dir">Next lesson →</span><b>Prompt Injection &amp; Security</b></a>
+</footer>
+<div class="footer">Mentoring · Building with AI + LLMs · 12 Tool &amp; Function Calling</div>
+<script src="../assets/app.js"></script>
+<script>
+function mkAlgo(vizId, stageId, frames, renderer){
+  var root=document.getElementById(vizId);
+  if(!root || !window.AlgoViz) return;
+  var stage=document.getElementById(stageId);
+  AlgoViz(root, frames.map(function(fr){ return {explain:fr.explain, apply:function(){ renderer(stage, fr); }}; }));
+}
+
+/* (a) structured call */
+(function(){
+  function render(stage,fr){
+    var obj='<div class="callobj'+(fr.n>=1?' on':'')+'">{\n  <span class="k">"function"</span>: <span class="v">"bookTable"</span>,\n  <span class="k">"arguments"</span>: {\n'+
+      (fr.n>=2?'    <span class="k">"party"</span>: <span class="v">2</span>,\n':'    …\n')+
+      (fr.n>=3?'    <span class="k">"time"</span>: <span class="v">"19:00"</span>,\n    <span class="k">"date"</span>: <span class="v">"tomorrow"</span>\n':'')+
+      '  }\n}</div>';
+    stage.innerHTML='<div class="qb">User: "Book a table for two at 7pm tomorrow."</div>'+obj+'<div class="enote">'+fr.note+'</div>';
+  }
+  mkAlgo("callViz","callStage",[
+    {n:0,note:'A casual, human sentence.',explain:"The user speaks naturally. Your code can't act on a sentence — it needs precise instructions."},
+    {n:1,note:'The model chooses the function to call: bookTable.',explain:"Instead of chatting back, the model produces a <b>structured call</b> — first, which function: <code>bookTable</code>."},
+    {n:2,note:'It extracts "two" → party: 2.',explain:"It reads the sentence and fills the arguments — \"two\" becomes <code>party: 2</code>."},
+    {n:3,note:'✅ And the rest: time 19:00, date tomorrow. A clean, executable request.',explain:"It fills the remaining fields — time and date — in the exact format your function expects. Now your code has something precise to run."}
+  ],render);
+})();
+
+/* (b) round trip */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="rt">'+
+      '<div class="rn'+(fr.node==="user"?' on':'')+'">🗣️ User asks</div><span class="rar">→</span>'+
+      '<div class="rn call'+(fr.node==="model"?' on':'')+'">🧠 Model<br><small>emits call</small></div><span class="rar">→</span>'+
+      '<div class="rn run'+(fr.node==="run"?' on':'')+'">⚙️ Your app<br><small>runs bookTable()</small></div><span class="rar">→</span>'+
+      '<div class="rn'+(fr.node==="result"?' on':'')+'">📦 Result</div><span class="rar">→</span>'+
+      '<div class="rn ans'+(fr.node==="answer"?' on':'')+'">💬 Reply</div>'+
+      '</div><div class="enote">'+fr.note+'</div>';
+  }
+  mkAlgo("rtViz","rtStage",[
+    {node:"user",note:'"Book a table for two at 7pm tomorrow."',explain:"The user makes a request."},
+    {node:"model",note:'Model emits: bookTable(party: 2, time: "19:00", date: "tomorrow")',explain:"The model outputs the structured call — but it does <b>not</b> run anything itself."},
+    {node:"run",note:'YOUR code runs the real bookTable() function against the booking system.',explain:"Your trusted app receives the call, (validates it,) and executes the real function. The model never touches the database."},
+    {node:"result",note:'The function returns: { confirmed: true, id: "A12" }',explain:"The function does its job and returns a result to the app."},
+    {node:"answer",note:'✅ Model turns the result into: "Done! Table for 2 at 7pm tomorrow — confirmation A12."',explain:"The result is passed back to the model, which phrases a friendly reply. Model → call → your code → result → model → answer."}
+  ],render);
+})();
+
+/* (c) tool menu */
+(function(){
+  var TOOLS=[
+    {fn:"bookTable",p:"(party, date, time)"},
+    {fn:"checkWeather",p:"(city)"},
+    {fn:"sendEmail",p:"(to, subject, body)"}
+  ];
+  function render(stage,fr){
+    var rows=TOOLS.map(function(t,i){
+      var cls="mitem"+(fr.n>=1?' on':'')+(fr.pick===i?' pick':'');
+      return '<div class="'+cls+'"><span class="fn">'+t.fn+'</span> <span style="color:var(--faint)">'+t.p+'</span></div>';
+    }).join("");
+    stage.innerHTML='<div class="vlbl" style="margin-top:0">TOOLS YOU GAVE THE MODEL</div><div class="menu">'+rows+'</div>'+
+      (fr.req?'<div class="enote">'+fr.req+'</div>':'');
+  }
+  mkAlgo("menuViz","menuStage",[
+    {n:0,pick:-1,req:"",explain:"You define which functions the model is allowed to call — a menu, each with a name and expected inputs."},
+    {n:1,pick:-1,req:'User asks: "What\'s the weather in Paris?"',explain:"The full menu is available. A request comes in about the weather."},
+    {n:1,pick:1,req:'→ The model picks checkWeather and fills city: "Paris".',explain:"The model matches the request to <b>checkWeather</b> and fills the argument. It can only choose from tools you provided — it can't invent new ones or reach beyond the menu."}
+  ],render);
+})();
+
+var QA=[
+  ["What is function (tool) calling?","A capability where, instead of replying in prose, the model outputs a structured request naming a function to run and the arguments to pass. Your application then executes that function and returns the result, which the model uses to answer. The model decides what to do; your code does it."],
+  ["Does the model run the function itself?","No. The model only produces a structured description of the call — it never executes anything. Your trusted application receives that call, optionally validates it, runs the real function, and passes the result back. This keeps you in control of what actually happens."],
+  ["Why output a structured call instead of a sentence?","Because a sentence like 'Sure, I'll book that!' can't be executed or checked — there's no function name or values to act on. A structured call (function + typed arguments) is machine-readable: your code can parse it, validate it, and run it reliably."],
+  ["What are tool definitions or the 'menu'?","The set of functions you tell the model it may call, each with a name, description, and expected inputs. The model reads the user's request, selects the matching tool, and fills in the arguments. It can only call functions you've defined — nothing else."],
+  ["Walk through the tool-calling round trip.","User asks → the model emits a structured call → your app validates and runs the real function → the function returns a result → the result goes back to the model → the model phrases a friendly answer. Your code is always the one executing the action."],
+  ["How do you keep tool calling safe?","Validate every call before running it (right function, valid and permitted arguments), follow least privilege (only expose safe tools — never a dangerous one), and require human confirmation for costly or irreversible actions. The model can pick wrong, so your app must guard execution."]
+];
+var accWrap=document.getElementById("accWrap");
+QA.forEach(function(qa,i){
+  var d=document.createElement("details"); d.className="acc";
+  d.innerHTML='<summary><span class="q">Q'+(i+1)+'</span>'+qa[0]+'<span class="plus">+</span></summary><div class="ans">'+qa[1]+'</div>';
+  accWrap.appendChild(d);
+});
+</script>
+</body>
+</html>

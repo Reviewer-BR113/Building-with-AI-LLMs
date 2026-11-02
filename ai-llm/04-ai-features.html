@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI + LLMs · 04 AI-Powered Features — Lecture</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .vlbl{font-family:var(--mono);font-size:.68rem;color:var(--faint);letter-spacing:.05em;margin:18px 0 8px}
+  .stg{background:#0a0f18;border:1px solid var(--border-2);border-radius:12px;padding:16px}
+  .promptline{font-family:var(--mono);font-size:.76rem;color:var(--accent-2);margin-bottom:10px}
+  .gen{font-family:var(--mono);font-size:1rem;background:var(--panel);border:1px solid var(--border-2);border-radius:9px;padding:14px;min-height:54px;color:var(--text)}
+  .cursor{display:inline-block;width:8px;height:1.05em;background:var(--accent-2);vertical-align:text-bottom;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+  .autoc{font-family:var(--mono);font-size:.95rem;background:var(--panel);border:1px solid var(--accent-2);border-radius:9px;padding:13px}
+  .autoc .typed{color:var(--text)} .autoc .ghost{color:var(--faint);background:rgba(167,139,250,.08);border-radius:3px}
+  .accap{font-size:.7rem;color:var(--faint);margin-top:10px;font-family:var(--mono)}
+  .accap b{color:var(--accent-2)}
+  .sres{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .sr{padding:8px 12px;border:1px solid var(--border-2);border-radius:8px;font-family:var(--mono);font-size:.76rem;background:var(--panel);color:var(--muted);opacity:.5;transition:opacity .3s,border-color .3s}
+  .sr.hit{opacity:1;border-color:var(--ok);color:var(--ok);background:rgba(52,211,153,.06)}
+  .sr.miss{opacity:.4;border-style:dashed}
+  .qbox{font-family:var(--mono);font-size:.8rem;color:var(--accent-2);border:1px solid var(--accent-2);border-radius:8px;padding:9px 12px;background:rgba(167,139,250,.06);margin-bottom:8px}
+  .cpart{padding:9px 12px;border:1px solid var(--border-2);border-radius:8px;font-family:var(--mono);font-size:.78rem;background:var(--panel);margin-bottom:6px;opacity:.3;transition:opacity .3s;color:var(--muted)}
+  .cpart.on{opacity:1}
+  .cpart .lb{font-size:.56rem;color:var(--faint);display:block;margin-bottom:3px}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">AI + LLMs · 04 AI-Powered Features</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="overview.html">Section overview</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv"><span class="n">Lesson 04</span> · ✨ Building with AI</div>
+    <h1 class="rv d1">AI-powered <span class="grad">features</span></h1>
+    <p class="lead rv d2">Now let's build. Four everyday AI features power most apps you'll see — and each is a small twist on the same "text in, text out" model. Watch how each one works.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>Text generation</b><span>write &amp; streaming</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>Smart input</b><span>auto-complete</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>AI search</b><span>by meaning</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>Content generation</b><span>structured output</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 CONCEPT -->
+<section id="concept">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Idea</p>
+    <h2 class="rv">Same engine, different wrappers</h2>
+    <p class="lead rv d1">Every feature here is the same LLM underneath — what changes is the prompt around it and how the app uses the result. Learn these four and you can recognize (and build) most AI features in the wild.</p>
+  </div>
+</section>
+
+<!-- 02 TEXT GEN -->
+<section id="textgen">
+  <div class="container">
+    <p class="eyebrow rv">02 · Text Generation</p>
+    <h2 class="rv">Writing, one piece at a time</h2>
+    <p class="lead rv d1">The most basic feature: give a prompt, get written text — a tagline, an email, a summary. The model produces it <b>piece by piece</b>, which is why apps often "stream" it onto the screen as it's generated, so you don't stare at a blank box.</p>
+    <div class="vlbl rv d2">▶ WATCH IT STREAM</div>
+    <div class="rv d2" id="genViz">
+      <div class="stg" id="genStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 AUTOCOMPLETE -->
+<section id="autocomplete">
+  <div class="container">
+    <p class="eyebrow rv">03 · Smart Input / Auto-Complete</p>
+    <h2 class="rv">Finishing your thought</h2>
+    <p class="lead rv d1">As the user types, the app quietly asks the model to predict the rest and shows it as faint "ghost" text. Press Tab to accept. It's text generation, triggered by keystrokes and shown inline.</p>
+    <div class="vlbl rv d2">▶ TYPE AND SEE SUGGESTIONS</div>
+    <div class="rv d2" id="acViz">
+      <div class="stg" id="acStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 AI SEARCH -->
+<section id="search">
+  <div class="container">
+    <p class="eyebrow rv">04 · AI-Assisted Search</p>
+    <h2 class="rv">Searching by meaning, not just words</h2>
+    <p class="lead rv d1">Old search matches <b>exact words</b>. AI search matches <b>meaning</b> — so "affordable laptop" can find "cheap notebook computer" even though they share no words. This is <em>semantic</em> search (the engine behind it is covered in Lesson 10).</p>
+    <div class="vlbl rv d2">▶ KEYWORD vs MEANING — compare the results</div>
+    <div class="rv d2" id="srchViz">
+      <div class="stg" id="srchStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 CONTENT GEN -->
+<section id="contentgen">
+  <div class="container">
+    <p class="eyebrow rv">05 · Content Generation</p>
+    <h2 class="rv">Producing structured content</h2>
+    <p class="lead rv d1">Beyond a sentence, AI can generate whole structured pieces — a product description, a blog outline, a lesson plan. The trick (from Lesson 02) is asking for a clear structure so each part lands where you expect.</p>
+    <div class="vlbl rv d2">▶ ASSEMBLE A PRODUCT DESCRIPTION</div>
+    <div class="rv d2" id="cgViz">
+      <div class="stg" id="cgStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- WATCH OUT -->
+<section id="watch">
+  <div class="container">
+    <p class="eyebrow rv">06 · Keep in Mind</p>
+    <h2 class="rv">Building these well</h2>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card rv d1"><h3>🌊 Stream long output</h3><p>Show text as it generates so the app feels fast, not frozen.</p></div>
+      <div class="card rv d2"><h3>🎯 Match by meaning</h3><p>Semantic search finds relevant results that keyword search misses.</p></div>
+      <div class="card rv d3"><h3>📐 Ask for structure</h3><p>Structured content is far easier to display and reuse.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <div class="container">
+    <p class="eyebrow rv">07 · Check Your Understanding</p>
+    <h2 class="rv">Questions</h2>
+    <p class="lead rv d1">Click any question to reveal a plain-English answer.</p>
+    <div style="margin-top:24px;max-width:820px" id="accWrap"></div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">Recap</p>
+    <h2 class="rv">Summary</h2>
+    <div class="split top" style="margin-top:22px">
+      <div class="rv d1">
+        <div class="timeline">
+          <div class="tl-item"><span class="dot"></span><b>Text generation</b><p>Prompt in, written text out — streamed piece by piece.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Auto-complete</b><p>Predict the rest as the user types; accept with Tab.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>AI search</b><p>Match by meaning, not exact words.</p></div>
+          <div class="tl-item"><span class="dot" style="border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12)"></span><b>Content generation</b><p>Whole structured pieces, in a predictable shape.</p></div>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="grid" style="gap:12px">
+          <div class="card" style="padding:15px"><b>✍️ Generation = text in, text out.</b></div>
+          <div class="card" style="padding:15px"><b>⌨️ Autocomplete is inline generation.</b></div>
+          <div class="card" style="padding:15px"><b>🔎 AI search understands meaning.</b></div>
+          <div class="card" style="padding:15px"><b>🧱 Structure makes content usable.</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="pager">
+  <a class="prev" href="03-integrating-llms.html"><span class="dir">← Previous</span><b>Integrating LLMs</b></a>
+  <a class="next" href="05-ai-workflows.html"><span class="dir">Next lesson →</span><b>Automating Workflows</b></a>
+</footer>
+<div class="footer">Mentoring · Building with AI + LLMs · 04 AI-Powered Features</div>
+<script src="../assets/app.js"></script>
+<script>
+function mkAlgo(vizId, stageId, frames, renderer){
+  var root=document.getElementById(vizId);
+  if(!root || !window.AlgoViz) return;
+  var stage=document.getElementById(stageId);
+  AlgoViz(root, frames.map(function(fr){ return {explain:fr.explain, apply:function(){ renderer(stage, fr); }}; }));
+}
+
+/* (a) streaming text generation */
+(function(){
+  var FULL="Brew a better morning.";
+  var STOPS=[0,4,6,13,22];
+  function render(stage,fr){
+    var txt=FULL.slice(0,fr.chars);
+    stage.innerHTML='<div class="promptline">PROMPT: "Write a short tagline for a coffee shop."</div>'+
+      '<div class="gen">'+txt+'<span class="cursor"></span></div>';
+  }
+  mkAlgo("genViz","genStage",[
+    {chars:0,explain:"We send the prompt. The output box is empty — the model hasn't produced anything yet."},
+    {chars:4,explain:"The first word appears: \"Brew\". The model generates a little at a time, not all at once."},
+    {chars:6,explain:"\"Brew a…\" — it keeps predicting the next piece, building on what it already wrote."},
+    {chars:13,explain:"\"Brew a better…\" — streaming lets the app show this live, so the user sees progress instantly."},
+    {chars:22,explain:"\"Brew a better morning.\" Complete. Same generation powers emails, summaries, replies — anything written."}
+  ],render);
+})();
+
+/* (b) autocomplete */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML='<div class="autoc"><span class="typed">'+fr.typed+'</span><span class="ghost">'+fr.ghost+'</span></div>'+
+      '<div class="accap">'+fr.cap+'</div>';
+  }
+  mkAlgo("acViz","acStage",[
+    {typed:"Thanks for your ",ghost:"email. I'll get back to you shortly.",cap:"As you type, the app asks the model to <b>predict the rest</b> — shown as faint ghost text.",explain:"You've typed \"Thanks for your \". The model predicts a likely continuation and shows it faintly ahead of your cursor."},
+    {typed:"Thanks for your order",ghost:". It will ship within 2 business days.",cap:"Type more and the suggestion <b>adapts</b> to what you wrote.",explain:"You continue with \"order\". The suggestion instantly changes to fit the new context — it's re-predicting from your latest text."},
+    {typed:"Thanks for your order. It will ship within 2 business days.",ghost:"",cap:"Press <b>Tab</b> to accept the suggestion — the ghost text becomes real.",explain:"You accept the suggestion (Tab). The predicted text is now yours. Auto-complete is just fast, inline text generation."}
+  ],render);
+})();
+
+/* (c) semantic vs keyword search */
+(function(){
+  var DOCS=[
+    {t:"budget-friendly laptop",kw:true,sem:true},
+    {t:"cheap notebook computer",kw:false,sem:true},
+    {t:"premium gaming rig",kw:false,sem:false},
+    {t:"luxury wristwatch",kw:false,sem:false}
+  ];
+  function render(stage,fr){
+    var rows=DOCS.map(function(d){
+      var cls="sr";
+      if(fr.mode==="keyword") cls += d.kw?" hit":" miss";
+      else if(fr.mode==="semantic") cls += d.sem?" hit":" miss";
+      return '<div class="'+cls+'">'+d.t+(fr.mode==="keyword"&&d.kw?'  ✓ has word "laptop"':'')+(fr.mode==="semantic"&&d.sem?'  ✓ means "cheap laptop"':'')+'</div>';
+    }).join("");
+    stage.innerHTML='<div class="qbox">Search: "affordable laptop"</div><div class="sres">'+rows+'</div>';
+  }
+  mkAlgo("srchViz","srchStage",[
+    {mode:"none",explain:"The user searches \"affordable laptop\". Below are four items in the store. Watch how two search methods handle them."},
+    {mode:"keyword",explain:"<b>Keyword search</b> matches the literal word \"laptop\". It finds \"budget-friendly laptop\" — but <b>misses</b> \"cheap notebook computer\", which is exactly what the user wants, just worded differently."},
+    {mode:"semantic",explain:"<b>Semantic (AI) search</b> matches by <b>meaning</b>. It finds both the laptop <em>and</em> the cheap notebook — because it understands they mean the same thing. That's the power of searching by meaning."}
+  ],render);
+})();
+
+/* (d) content generation */
+(function(){
+  function render(stage,fr){
+    var P=[
+      {lb:"TITLE",tx:"AeroStep Running Shoes"},
+      {lb:"TAGLINE",tx:"Feather-light. Built to fly."},
+      {lb:"KEY POINTS",tx:"• 180g ultralight  • breathable mesh  • 30-day returns"},
+      {lb:"CALL TO ACTION",tx:"Shop now → free shipping this week"}
+    ];
+    var html='<div class="promptline">PROMPT: "Write a product description as: Title, Tagline, 3 key points, CTA."</div>';
+    P.forEach(function(p,i){ html+='<div class="cpart'+(i<fr.n?' on':'')+'"><span class="lb">'+p.lb+'</span>'+p.tx+'</div>'; });
+    stage.innerHTML=html;
+  }
+  mkAlgo("cgViz","cgStage",[
+    {n:0,explain:"We ask for a product description in a <b>fixed structure</b>: title, tagline, key points, and a call to action."},
+    {n:1,explain:"The <b>title</b> is generated first — a clear product name."},
+    {n:2,explain:"Then a punchy <b>tagline</b>."},
+    {n:3,explain:"Then the <b>key points</b> as a tidy list."},
+    {n:4,explain:"Finally the <b>call to action</b>. Because we specified the structure, each part is clean and easy to drop into the page."}
+  ],render);
+})();
+
+var QA=[
+  ["What is text generation, at its simplest?","Giving the model a prompt and getting written text back — a tagline, email, summary, reply, and so on. The model produces the text a piece at a time, which is why apps often stream it onto the screen as it's created."],
+  ["Why do apps 'stream' generated text?","Because the model generates text incrementally, streaming lets the app display each piece as it arrives instead of waiting for the whole thing. The user sees instant progress, so the feature feels fast and responsive rather than frozen."],
+  ["How does AI auto-complete work?","As the user types, the app sends the current text to the model and asks it to predict the continuation, then shows that prediction as faint 'ghost' text. Accepting it (e.g. Tab) makes it real. It's ordinary text generation, triggered by typing and shown inline."],
+  ["How is AI search different from regular search?","Regular (keyword) search matches exact words. AI (semantic) search matches meaning, so a query like 'affordable laptop' can find 'cheap notebook computer' even with no shared words. It understands that different words can mean the same thing."],
+  ["Why does semantic search find results keyword search misses?","Because it compares the meaning of the query and the documents, not their literal words. Two phrases that are worded completely differently but mean the same thing will still match — something exact-word matching can never do."],
+  ["What's the key to good AI content generation?","Asking for a clear, explicit structure (title, sections, bullet points, etc.). Structured output lands each part where you expect, making it easy to display, style, and reuse — versus one blob of prose that's hard to work with."]
+];
+var accWrap=document.getElementById("accWrap");
+QA.forEach(function(qa,i){
+  var d=document.createElement("details"); d.className="acc";
+  d.innerHTML='<summary><span class="q">Q'+(i+1)+'</span>'+qa[0]+'<span class="plus">+</span></summary><div class="ans">'+qa[1]+'</div>';
+  accWrap.appendChild(d);
+});
+</script>
+</body>
+</html>

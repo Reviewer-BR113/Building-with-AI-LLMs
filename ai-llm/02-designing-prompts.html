@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI + LLMs · 02 Designing Prompts — Lecture</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .vlbl{font-family:var(--mono);font-size:.68rem;color:var(--faint);letter-spacing:.05em;margin:18px 0 8px}
+  .stg{background:#0a0f18;border:1px solid var(--border-2);border-radius:12px;padding:16px}
+  .pbox{border:1px solid var(--border-2);border-radius:10px;padding:11px 13px;font-family:var(--mono);font-size:.78rem;background:var(--panel);margin-bottom:8px;opacity:.35;transition:opacity .3s}
+  .pbox.on{opacity:1}
+  .pbox .lb{font-size:.58rem;color:var(--faint);letter-spacing:.05em;display:block;margin-bottom:4px}
+  .pbox.sys{border-color:var(--accent)} .pbox.sys .lb{color:var(--accent)}
+  .pbox.usr{border-color:var(--accent-3)} .pbox.usr .lb{color:var(--accent-3)}
+  .pbox.ai{border-color:var(--border-2);color:var(--muted)}
+  .tmpl{font-family:var(--mono);font-size:.86rem;line-height:2;color:var(--text)}
+  .blank{background:rgba(167,139,250,.16);color:var(--accent-2);border-radius:5px;padding:1px 7px}
+  .blank.filled{background:rgba(52,211,153,.16);color:var(--ok)}
+  .outs{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .ocard{flex:1;min-width:130px;border:1px solid var(--border-2);border-radius:8px;padding:10px;font-family:var(--mono);font-size:.7rem;background:var(--panel);color:var(--muted)}
+  .ocard.diff{border-color:var(--bad)} .ocard.same{border-color:var(--ok)}
+  .ocard .h{font-size:.56rem;color:var(--faint);margin-bottom:5px}
+  .chain{display:flex;flex-direction:column;gap:8px;font-family:var(--mono);font-size:.76rem}
+  .cstep{display:flex;gap:10px;align-items:center;padding:10px 13px;border:1px solid var(--border-2);border-radius:9px;background:var(--panel);opacity:.35;transition:opacity .3s}
+  .cstep.on{opacity:1;border-color:var(--accent-2)}
+  .cstep .num{width:22px;height:22px;border-radius:50%;background:rgba(167,139,250,.18);color:var(--accent-2);display:grid;place-items:center;font-size:.7rem;flex:none}
+  .cstep .io{color:var(--faint);font-size:.66rem}
+  .cflow{color:var(--faint);text-align:center;font-size:.9rem}
+  .memnote{padding:10px 13px;border:1px solid var(--accent);border-radius:8px;background:rgba(34,211,238,.05);font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">AI + LLMs · 02 Designing Prompts</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="overview.html">Section overview</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv"><span class="n">Lesson 02</span> · ✍️ Foundations</div>
+    <h1 class="rv d1">Designing <span class="grad">prompts</span></h1>
+    <p class="lead rv d2">A prompt is the instruction you give the model — and small changes make big differences. In a real app you don't write prompts by hand each time; you <b>design</b> them: reusable, structured, and predictable.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>User vs system</b><span>two kinds of prompt</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>Templates</b><span>reusable prompts</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>Consistency</b><span>predictable output</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>Pipelines</b><span>chaining prompts</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 CONCEPT -->
+<section id="concept">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Idea</p>
+    <h2 class="rv">Prompts are the steering wheel</h2>
+    <p class="lead rv d1">The model's behavior is steered almost entirely by the text you give it. That's powerful — and fragile. A well-designed prompt gets reliable results; a sloppy one gets a different answer every time. In applications, prompt design is real engineering.</p>
+  </div>
+</section>
+
+<!-- 02 USER VS SYSTEM -->
+<section id="usersystem">
+  <div class="container">
+    <p class="eyebrow rv">02 · User vs System Prompts</p>
+    <h2 class="rv">One sets the rules, the other asks the questions</h2>
+    <p class="lead rv d1">The <b>system prompt</b> is set once by the app — it defines the AI's role, tone, and rules, and stays constant. The <b>user prompt</b> is what changes with each request. Same system, many users prompts.</p>
+    <div class="vlbl rv d2">▶ SEE HOW THE SYSTEM PROMPT PERSISTS</div>
+    <div class="rv d2" id="suViz">
+      <div class="stg" id="suStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 TEMPLATES -->
+<section id="templates">
+  <div class="container">
+    <p class="eyebrow rv">03 · Prompt Templates</p>
+    <h2 class="rv">Write it once, reuse it forever</h2>
+    <p class="lead rv d1">A <b>template</b> is a prompt with blanks. The app fills the blanks with real values at runtime. This gives you the same reliable structure every time, with only the specifics changing.</p>
+    <div class="vlbl rv d2">▶ FILL IN A TEMPLATE — step through it</div>
+    <div class="rv d2" id="tmplViz">
+      <div class="stg" id="tmplStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 CONSISTENCY -->
+<section id="consistency">
+  <div class="container">
+    <p class="eyebrow rv">04 · Structuring for Consistent Outputs</p>
+    <h2 class="rv">Tell it the shape you want</h2>
+    <p class="lead rv d1">If your app needs to <em>use</em> the model's answer, that answer must have a predictable shape. A vague prompt returns a different format each time; a structured prompt that specifies the output makes results consistent.</p>
+    <div class="vlbl rv d2">▶ VAGUE vs STRUCTURED — compare the outputs</div>
+    <div class="rv d2" id="consViz">
+      <div class="stg" id="consStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 PIPELINES -->
+<section id="pipelines">
+  <div class="container">
+    <p class="eyebrow rv">05 · Multi-Step Prompt Pipelines</p>
+    <h2 class="rv">Chain small prompts to do big work</h2>
+    <p class="lead rv d1">Instead of one giant prompt trying to do everything, break the job into steps — each a simple, reliable prompt whose <b>output becomes the next step's input</b>. Small steps are easier to get right and to debug.</p>
+    <div class="vlbl rv d2">▶ RUN A PIPELINE — messy note → tidy checklist</div>
+    <div class="rv d2" id="pipeViz">
+      <div class="stg" id="pipeStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- WATCH OUT -->
+<section id="watch">
+  <div class="container">
+    <p class="eyebrow rv">06 · Keep in Mind</p>
+    <h2 class="rv">Good prompt-design habits</h2>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card rv d1"><h3>🎭 Set the role</h3><p>A clear system prompt anchors tone and behavior across every request.</p></div>
+      <div class="card rv d2"><h3>📐 Specify the shape</h3><p>State the exact output format when the app will parse the result.</p></div>
+      <div class="card rv d3"><h3>🧩 Split big jobs</h3><p>A pipeline of small prompts beats one prompt trying to do it all.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <div class="container">
+    <p class="eyebrow rv">07 · Check Your Understanding</p>
+    <h2 class="rv">Questions</h2>
+    <p class="lead rv d1">Click any question to reveal a plain-English answer.</p>
+    <div style="margin-top:24px;max-width:820px" id="accWrap"></div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">Recap</p>
+    <h2 class="rv">Summary</h2>
+    <div class="split top" style="margin-top:22px">
+      <div class="rv d1">
+        <div class="timeline">
+          <div class="tl-item"><span class="dot"></span><b>User vs system</b><p>System sets constant rules; user prompt varies per request.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Templates</b><p>Prompts with blanks, filled at runtime — reusable structure.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Consistency</b><p>Specify the output shape so results are predictable.</p></div>
+          <div class="tl-item"><span class="dot" style="border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12)"></span><b>Pipelines</b><p>Chain small prompts; each output feeds the next.</p></div>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="grid" style="gap:12px">
+          <div class="card" style="padding:15px"><b>🎚️ Prompts steer the model.</b></div>
+          <div class="card" style="padding:15px"><b>♻️ Templates make prompts reusable.</b></div>
+          <div class="card" style="padding:15px"><b>📐 Structure → consistent output.</b></div>
+          <div class="card" style="padding:15px"><b>🔗 Chain small, reliable steps.</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="pager">
+  <a class="prev" href="01-how-ai-works.html"><span class="dir">← Previous</span><b>How AI Works Internally</b></a>
+  <a class="next" href="03-integrating-llms.html"><span class="dir">Next lesson →</span><b>Integrating LLMs into Apps</b></a>
+</footer>
+<div class="footer">Mentoring · Building with AI + LLMs · 02 Designing Prompts</div>
+<script src="../assets/app.js"></script>
+<script>
+function mkAlgo(vizId, stageId, frames, renderer){
+  var root=document.getElementById(vizId);
+  if(!root || !window.AlgoViz) return;
+  var stage=document.getElementById(stageId);
+  AlgoViz(root, frames.map(function(fr){ return {explain:fr.explain, apply:function(){ renderer(stage, fr); }}; }));
+}
+
+/* (a) user vs system */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="pbox sys on"><span class="lb">SYSTEM PROMPT · set once, always applies</span>You are a friendly cooking assistant. Always answer with a short, 3-step recipe.</div>'+
+      '<div class="pbox usr'+(fr.n>=1?' on':'')+'"><span class="lb">USER PROMPT · turn 1</span>Pasta?</div>'+
+      '<div class="pbox ai'+(fr.n>=2?' on':'')+'"><span class="lb">AI</span>1) Boil pasta. 2) Warm sauce. 3) Combine &amp; serve.</div>'+
+      '<div class="pbox usr'+(fr.n>=3?' on':'')+'"><span class="lb">USER PROMPT · turn 2 (system unchanged)</span>Soup?</div>'+
+      '<div class="pbox ai'+(fr.n>=4?' on':'')+'"><span class="lb">AI</span>1) Simmer broth. 2) Add veg. 3) Season &amp; serve.</div>';
+  }
+  mkAlgo("suViz","suStage",[
+    {n:0,explain:"The <b>system prompt</b> is set by the app, once. It defines the assistant's role and the exact style of every answer — here, a short 3-step recipe."},
+    {n:1,explain:"A <b>user prompt</b> arrives: \"Pasta?\" Short and open-ended."},
+    {n:2,explain:"The answer follows the system's rule — a tidy 3-step recipe — even though the user didn't ask for that format. The system prompt supplied it."},
+    {n:3,explain:"A second user prompt: \"Soup?\" The system prompt hasn't changed."},
+    {n:4,explain:"Same consistent style again. That's the point: <b>system = the constant personality/rules</b>, <b>user = the changing request</b>."}
+  ],render);
+})();
+
+/* (b) templates */
+(function(){
+  function render(stage,fr){
+    function b(name,val,filled){ return '<span class="blank'+(filled?' filled':'')+'">'+(filled?val:'{'+name+'}')+'</span>'; }
+    stage.innerHTML=
+      '<div class="tmpl">Write a '+b("tone","cheerful",fr.n>=1)+' product description for '+b("product","running shoes",fr.n>=2)+' in '+b("words","30",fr.n>=3)+' words.</div>'+
+      (fr.n>=4?'<div class="pbox on" style="margin-top:14px;border-color:var(--ok)"><span class="lb" style="color:var(--ok)">FINISHED PROMPT (sent to the model)</span>Write a cheerful product description for running shoes in 30 words.</div>':'');
+  }
+  mkAlgo("tmplViz","tmplStage",[
+    {n:0,explain:"Here's a <b>template</b> — a prompt with three blanks: <code>{tone}</code>, <code>{product}</code>, and <code>{words}</code>. The app reuses this shape for every product."},
+    {n:1,explain:"The app fills <b>{tone}</b> with \"cheerful\" (maybe chosen by a setting or the user)."},
+    {n:2,explain:"It fills <b>{product}</b> with \"running shoes\" — pulled from the item being described."},
+    {n:3,explain:"And <b>{words}</b> with \"30\" — a length limit."},
+    {n:4,explain:"The blanks are gone; a concrete, consistent prompt is ready. Swap the values and you get a new prompt with the <em>same reliable structure</em> — that's the power of templates."}
+  ],render);
+})();
+
+/* (c) consistency */
+(function(){
+  function render(stage,fr){
+    if(fr.mode==="vague"){
+      stage.innerHTML=
+        '<div class="pbox usr on"><span class="lb">VAGUE PROMPT</span>Tell me about this book.</div>'+
+        '<div class="vlbl" style="margin:10px 0 6px">3 RUNS → 3 DIFFERENT SHAPES</div>'+
+        '<div class="outs">'+
+        '<div class="ocard diff"><div class="h">RUN 1</div>A long flowing paragraph…</div>'+
+        '<div class="ocard diff"><div class="h">RUN 2</div>• bullet<br>• points</div>'+
+        '<div class="ocard diff"><div class="h">RUN 3</div>Rating: 8/10. It was…</div>'+
+        '</div>'+(fr.note?'<div class="memnote" style="margin-top:12px;border-color:var(--bad);color:var(--muted)">'+fr.note+'</div>':'');
+    }else{
+      stage.innerHTML=
+        '<div class="pbox usr on"><span class="lb">STRUCTURED PROMPT</span>Reply in exactly this format — Title: … | Summary: (one line) | Rating: N/5</div>'+
+        '<div class="vlbl" style="margin:10px 0 6px">3 RUNS → SAME SHAPE EVERY TIME</div>'+
+        '<div class="outs">'+
+        '<div class="ocard same"><div class="h">RUN 1</div>Title: Dune<br>Summary: …<br>Rating: 5/5</div>'+
+        '<div class="ocard same"><div class="h">RUN 2</div>Title: Dune<br>Summary: …<br>Rating: 5/5</div>'+
+        '<div class="ocard same"><div class="h">RUN 3</div>Title: Dune<br>Summary: …<br>Rating: 4/5</div>'+
+        '</div>'+(fr.note?'<div class="memnote" style="margin-top:12px">'+fr.note+'</div>':'');
+    }
+  }
+  mkAlgo("consViz","consStage",[
+    {mode:"vague",note:"",explain:"A <b>vague prompt</b>: \"Tell me about this book.\" Reasonable for a human, risky for an app."},
+    {mode:"vague",note:"⚠ Run it three times and you get three different shapes — a paragraph, bullets, a rating. Your app can't reliably read this.",explain:"Because nothing pins down the format, each run comes out differently. If code needs to extract the rating, it will break."},
+    {mode:"struct",note:"",explain:"Now a <b>structured prompt</b> that states the exact output format: Title, one-line Summary, Rating out of 5."},
+    {mode:"struct",note:"✅ Every run has the same shape. Now the app can parse it dependably (the values may differ, but the structure won't).",explain:"Same shape every time. Specifying the output format is the single biggest trick for making AI usable inside software."}
+  ],render);
+})();
+
+/* (d) pipelines */
+(function(){
+  function render(stage,fr){
+    var S=[
+      {t:"Raw input",io:'"buy milk also email boss and the report is due friday!!"'},
+      {t:"Step 1 · Extract action items",io:"→ buy milk · email boss · finish report"},
+      {t:"Step 2 · Sort by urgency",io:"→ report (Fri) · email boss · buy milk"},
+      {t:"Step 3 · Format as checklist",io:"→ ☐ Finish report (Fri)  ☐ Email boss  ☐ Buy milk"}
+    ];
+    var html='<div class="chain">';
+    S.forEach(function(s,i){
+      html+='<div class="cstep'+(i<=fr.n?' on':'')+'"><span class="num">'+(i===0?'in':i)+'</span><div><div>'+s.t+'</div><div class="io">'+s.io+'</div></div></div>';
+      if(i<S.length-1) html+='<div class="cflow">↓</div>';
+    });
+    html+='</div>';
+    stage.innerHTML=html;
+  }
+  mkAlgo("pipeViz","pipeStage",[
+    {n:0,explain:"We start with a <b>messy note</b>. One giant \"organize this\" prompt would be unreliable. Instead we use a pipeline of three simple prompts."},
+    {n:1,explain:"<b>Step 1</b> — a prompt that only <em>extracts action items</em>. Simple job, easy to get right. Its output becomes the next input."},
+    {n:2,explain:"<b>Step 2</b> — takes that list and only <em>sorts by urgency</em>. Again, one focused task."},
+    {n:3,explain:"<b>Step 3</b> — takes the sorted list and only <em>formats it as a checklist</em>. Three small, reliable steps chained together did the whole job."}
+  ],render);
+})();
+
+var QA=[
+  ["What's the difference between a user prompt and a system prompt?","The system prompt is set once by the app and defines the AI's role, tone, and rules — it stays constant across requests. The user prompt is the specific message that changes each time. The system prompt shapes <em>how</em> the AI responds; the user prompt is <em>what</em> it responds to."],
+  ["What is a prompt template?","A prompt written once with blanks (placeholders) that the app fills with real values at runtime — e.g. 'Write a {tone} description for {product}.' It gives every request the same reliable structure while only the specifics change, so you don't hand-write prompts each time."],
+  ["Why structure a prompt for consistent output?","Because if your app needs to use the answer (display it, parse a value from it), the answer must have a predictable shape. A vague prompt returns a different format each run; specifying the exact output format makes results consistent and safe to process in code."],
+  ["What is a multi-step prompt pipeline?","Breaking a complex job into several simple prompts, where each step's output becomes the next step's input — e.g. extract → sort → format. Small focused prompts are more reliable and easier to debug than one giant prompt trying to do everything at once."],
+  ["Why not just write one big prompt to do everything?","Big do-it-all prompts are harder for the model to follow reliably and harder for you to debug when something goes wrong. A pipeline isolates each task, so you can see exactly which step failed and fix just that one."],
+  ["What's the single most useful trick for app-ready prompts?","Specify the output format explicitly. Telling the model the exact shape you want (fields, structure, length) turns unpredictable prose into consistent, parseable results — the key to using AI reliably inside software."]
+];
+var accWrap=document.getElementById("accWrap");
+QA.forEach(function(qa,i){
+  var d=document.createElement("details"); d.className="acc";
+  d.innerHTML='<summary><span class="q">Q'+(i+1)+'</span>'+qa[0]+'<span class="plus">+</span></summary><div class="ans">'+qa[1]+'</div>';
+  accWrap.appendChild(d);
+});
+</script>
+</body>
+</html>

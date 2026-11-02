@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI + LLMs · 11 RAG — Answer from Your Data — Lecture</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .vlbl{font-family:var(--mono);font-size:.68rem;color:var(--faint);letter-spacing:.05em;margin:18px 0 8px}
+  .stg{background:#0a0f18;border:1px solid var(--border-2);border-radius:12px;padding:16px}
+  .pipe{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;font-family:var(--mono);font-size:.72rem}
+  .pnode{flex:1;min-width:92px;border:1px solid var(--border-2);border-radius:9px;padding:10px;background:var(--panel);text-align:center;transition:opacity .25s,border-color .25s,background .25s;opacity:.35}
+  .pnode.on{opacity:1;border-color:var(--accent-2);background:rgba(167,139,250,.08)}
+  .pnode .ic{font-size:1.15rem} .pnode .t{margin-top:4px;color:var(--text);font-size:.66rem}
+  .parrow{display:flex;align-items:center;color:var(--faint)}
+  .payload{margin-top:14px;padding:11px 13px;border:1px dashed var(--accent-2);border-radius:8px;background:rgba(167,139,250,.05);font-family:var(--mono);font-size:.74rem;color:var(--muted);min-height:1.2em}
+  .payload b{color:var(--accent-2)}
+  .qb{font-family:var(--mono);font-size:.78rem;color:var(--accent-2);border:1px solid var(--accent-2);border-radius:8px;padding:9px 12px;background:rgba(167,139,250,.06);margin-bottom:10px}
+  .ab{font-family:var(--font);font-size:.9rem;border:1px solid var(--border-2);border-radius:9px;padding:12px 14px;background:var(--panel);line-height:1.55;transition:border-color .3s}
+  .ab.bad{border-color:var(--bad)} .ab.good{border-color:var(--ok)}
+  .cite{font-family:var(--mono);font-size:.68rem;color:var(--ok);margin-top:8px}
+  .enote{margin-top:12px;padding:10px 13px;border:1px dashed var(--border-2);border-radius:8px;font-family:var(--mono);font-size:.74rem;color:var(--muted);min-height:1.2em}
+  .idx{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);font-size:.72rem}
+  .doc{border:1px solid var(--border-2);border-radius:8px;padding:10px 13px;background:var(--panel);text-align:center;opacity:.4;transition:opacity .3s}
+  .doc.on{opacity:1;border-color:var(--accent)}
+  .chunks{display:flex;gap:4px}
+  .ch{width:26px;height:32px;border:1px solid var(--border-2);border-radius:4px;background:var(--panel-2);opacity:.4;transition:opacity .3s}
+  .ch.on{opacity:1;border-color:var(--accent-3)}
+  .kb{border:1px solid var(--accent-2);border-radius:9px;padding:10px 14px;background:rgba(167,139,250,.08);color:var(--accent-2);text-align:center;opacity:.4;transition:opacity .3s}
+  .kb.on{opacity:1}
+  .iar{color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">AI + LLMs · 11 RAG</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="overview.html">Section overview</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv"><span class="n">Lesson 11</span> · 📚 Going Deeper</div>
+    <h1 class="rv d1">RAG — answer from <span class="grad">your data</span></h1>
+    <p class="lead rv d2">A model only knows what it was trained on — not your company's docs or today's data. <b>RAG</b> (Retrieval-Augmented Generation) fixes that: it looks up the relevant information first, then asks the model to answer <em>using it</em>. An open-book exam for the AI.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>The problem</b><span>it doesn't know your data</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>The RAG flow</b><span>retrieve → inject → answer</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>Grounding</b><span>answers with sources</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>Indexing</b><span>preparing your docs</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 CONCEPT -->
+<section id="concept">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Idea</p>
+    <h2 class="rv">Give the model the right page to read</h2>
+    <p class="lead rv d1">Instead of hoping the model memorized your information (it didn't), RAG <b>retrieves</b> the most relevant pieces of your own documents and hands them to the model along with the question. The model then answers from that supplied text — accurate, current, and grounded in your data.</p>
+  </div>
+</section>
+
+<!-- 02 THE PROBLEM -->
+<section id="problem">
+  <div class="container">
+    <p class="eyebrow rv">02 · The Problem</p>
+    <h2 class="rv">The model can't know what it never saw</h2>
+    <p class="lead rv d1">Ask a plain model about your company's private policy and it can't know it — so it may refuse, or worse, <b>make one up</b>. Training data doesn't include your internal docs or anything newer than its cutoff.</p>
+    <div class="vlbl rv d2">▶ ASK A PLAIN MODEL ABOUT YOUR DATA</div>
+    <div class="rv d2" id="probViz">
+      <div class="stg" id="probStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 RAG FLOW -->
+<section id="flow">
+  <div class="container">
+    <p class="eyebrow rv">03 · The RAG Flow</p>
+    <h2 class="rv">Retrieve first, then generate</h2>
+    <p class="lead rv d1">RAG adds a lookup step before the model answers. It embeds the question (Lesson 10), searches your knowledge base for the closest chunks, pastes them into the prompt, and <em>then</em> asks the model. Step through it:</p>
+    <div class="vlbl rv d2">▶ RUN THE RAG PIPELINE</div>
+    <div class="rv d2" id="ragViz">
+      <div class="stg" id="ragStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 GROUNDING -->
+<section id="grounding">
+  <div class="container">
+    <p class="eyebrow rv">04 · Grounding &amp; Sources</p>
+    <h2 class="rv">Answers you can trace back</h2>
+    <p class="lead rv d1">Because the answer is built from retrieved text, it's <b>grounded</b> — and you can show <b>which source</b> it came from. This slashes hallucination (the model isn't guessing, it's summarizing supplied facts) and lets users verify.</p>
+    <div class="vlbl rv d2">▶ UNGROUNDED vs GROUNDED</div>
+    <div class="rv d2" id="grndViz">
+      <div class="stg" id="grndStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 INDEXING -->
+<section id="indexing">
+  <div class="container">
+    <p class="eyebrow rv">05 · Indexing Your Documents</p>
+    <h2 class="rv">The prep step that makes it possible</h2>
+    <p class="lead rv d1">Before any of this works, you prepare your documents once: <b>split</b> them into small chunks, <b>embed</b> each chunk (Lesson 10), and <b>store</b> the vectors in a vector database. That's the searchable knowledge base RAG retrieves from.</p>
+    <div class="vlbl rv d2">▶ BUILD THE KNOWLEDGE BASE</div>
+    <div class="rv d2" id="idxViz">
+      <div class="stg" id="idxStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- WATCH OUT -->
+<section id="watch">
+  <div class="container">
+    <p class="eyebrow rv">06 · Keep in Mind</p>
+    <h2 class="rv">RAG done well</h2>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card rv d1"><h3>🎯 Retrieval quality is everything</h3><p>If the wrong chunks are retrieved, the answer will be wrong. Good chunks in → good answer out.</p></div>
+      <div class="card rv d2"><h3>📏 Chunk sensibly</h3><p>Too big wastes tokens and dilutes; too small loses context. Split by section/paragraph.</p></div>
+      <div class="card rv d3"><h3>🔗 Keep it fresh</h3><p>Re-index when documents change, so the knowledge base stays current.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <div class="container">
+    <p class="eyebrow rv">07 · Check Your Understanding</p>
+    <h2 class="rv">Questions</h2>
+    <p class="lead rv d1">Click any question to reveal a plain-English answer.</p>
+    <div style="margin-top:24px;max-width:820px" id="accWrap"></div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">Recap</p>
+    <h2 class="rv">Summary</h2>
+    <div class="split top" style="margin-top:22px">
+      <div class="rv d1">
+        <div class="timeline">
+          <div class="tl-item"><span class="dot"></span><b>The problem</b><p>A model can't know your private or current data.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>The RAG flow</b><p>Embed question → search KB → inject chunks → answer.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Grounding</b><p>Answers built from — and traceable to — real sources.</p></div>
+          <div class="tl-item"><span class="dot" style="border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12)"></span><b>Indexing</b><p>Chunk → embed → store, to build the knowledge base.</p></div>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="grid" style="gap:12px">
+          <div class="card" style="padding:15px"><b>📖 RAG = open-book for the AI.</b></div>
+          <div class="card" style="padding:15px"><b>🔎 Retrieve relevant chunks first.</b></div>
+          <div class="card" style="padding:15px"><b>🧾 Grounded answers cut hallucination.</b></div>
+          <div class="card" style="padding:15px"><b>🗄️ Built on embeddings (Lesson 10).</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="pager">
+  <a class="prev" href="10-embeddings-vectors.html"><span class="dir">← Previous</span><b>Embeddings &amp; Vector Search</b></a>
+  <a class="next" href="12-tool-calling.html"><span class="dir">Next lesson →</span><b>Tool &amp; Function Calling</b></a>
+</footer>
+<div class="footer">Mentoring · Building with AI + LLMs · 11 RAG — Answer from Your Data</div>
+<script src="../assets/app.js"></script>
+<script>
+function mkAlgo(vizId, stageId, frames, renderer){
+  var root=document.getElementById(vizId);
+  if(!root || !window.AlgoViz) return;
+  var stage=document.getElementById(stageId);
+  AlgoViz(root, frames.map(function(fr){ return {explain:fr.explain, apply:function(){ renderer(stage, fr); }}; }));
+}
+
+/* (a) the problem */
+(function(){
+  function render(stage,fr){
+    var ans = fr.n>=1 ? '<div class="ab '+(fr.reveal?'bad':'')+'">'+(fr.reveal?'⚠ ':'')+'"Our refund policy allows returns within 45 days for a full refund, no questions asked."</div>' : '';
+    stage.innerHTML='<div class="qb">User: "What is OUR company\'s refund policy?"</div>'+ans+
+      (fr.note?'<div class="enote" style="'+(fr.reveal?'border-color:var(--bad)':'')+'">'+fr.note+'</div>':'');
+  }
+  mkAlgo("probViz","probStage",[
+    {n:0,reveal:false,note:"",explain:"A user asks about the company's own refund policy — internal information."},
+    {n:1,reveal:false,note:"The model answers confidently and specifically.",explain:"The plain model produces a confident, specific policy. Looks authoritative…"},
+    {n:1,reveal:true,note:'❌ But the model has never seen your policy — it invented "45 days". Your real policy is 30 days. A costly hallucination.',explain:"…but it <b>never saw your policy</b>. It guessed \"45 days\" — your actual policy is 30. Without your data, it fills the gap with plausible fiction. This is exactly what RAG prevents."}
+  ],render);
+})();
+
+/* (b) RAG flow */
+(function(){
+  var N=[
+    {ic:"❓",t:"Question"},{ic:"🔢",t:"Embed it"},{ic:"🗄️",t:"Search KB"},{ic:"📄",t:"Top chunks"},{ic:"📥",t:"Inject"},{ic:"🧠",t:"LLM"},{ic:"✅",t:"Answer"}
+  ];
+  function render(stage,fr){
+    var html='<div class="pipe">';
+    N.forEach(function(n,i){
+      html+='<div class="pnode'+(i===fr.active?' on':'')+'"><div class="ic">'+n.ic+'</div><div class="t">'+n.t+'</div></div>';
+      if(i<N.length-1) html+='<div class="parrow">›</div>';
+    });
+    html+='</div><div class="payload">'+fr.payload+'</div>';
+    stage.innerHTML=html;
+  }
+  mkAlgo("ragViz","ragStage",[
+    {active:0,payload:'The user asks: "What is our refund policy?"',explain:"<b>Question.</b> Same question as before — but now RAG will handle it."},
+    {active:1,payload:'The question is turned into an embedding (a vector) — just like Lesson 10.',explain:"<b>Embed.</b> Convert the question to a vector so we can search by meaning."},
+    {active:2,payload:'That vector searches the knowledge base of your documents for the nearest chunks.',explain:"<b>Search.</b> Find the document chunks whose meaning is closest to the question."},
+    {active:3,payload:'It retrieves the top match: "Refunds: returns accepted within 30 days…" (from policy.pdf)',explain:"<b>Retrieve.</b> The most relevant chunk of your <em>real</em> policy comes back."},
+    {active:4,payload:'That chunk is pasted into the prompt, next to the question.',explain:"<b>Inject.</b> The retrieved text is added to the prompt as context — the \"open book.\""},
+    {active:5,payload:'The model reads question + retrieved policy and composes the answer from it.',explain:"<b>Generate.</b> Now the model answers <em>using the supplied facts</em>, not its memory."},
+    {active:6,payload:'✅ "Our policy allows returns within 30 days." — correct, from your data.',explain:"<b>Answer.</b> Accurate and grounded in your actual document. That's Retrieval-Augmented Generation."}
+  ],render);
+})();
+
+/* (c) grounding */
+(function(){
+  function render(stage,fr){
+    if(fr.mode==="un"){
+      stage.innerHTML='<div class="ab bad">⚠ "Returns within 45 days."</div><div class="enote" style="border-color:var(--bad)">No source. Could be true, could be invented — you can\'t tell.</div>';
+    }else{
+      stage.innerHTML='<div class="ab good">"Returns within 30 days for a full refund."</div><div class="cite">📎 Source: policy.pdf › §Refunds</div><div class="enote">Grounded in a retrieved passage — and the user can click the source to verify.</div>';
+    }
+  }
+  mkAlgo("grndViz","grndStage",[
+    {mode:"un",explain:"<b>Ungrounded</b> (plain model): an answer with no source. It may be right or a hallucination — there's no way to check."},
+    {mode:"gr",explain:"<b>Grounded</b> (RAG): the answer is built from a retrieved passage and <b>cites its source</b>. The model summarized real text instead of guessing, and the user can verify it. Grounding is RAG's biggest safety win."}
+  ],render);
+})();
+
+/* (d) indexing */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="idx">'+
+      '<div class="doc'+(fr.n>=1?' on':'')+'">📄 policy.pdf<br><small>your document</small></div>'+
+      '<span class="iar">→ split →</span>'+
+      '<div class="chunks">'+[0,1,2,3].map(function(i){return '<div class="ch'+(fr.n>=2?' on':'')+'"></div>';}).join("")+'</div>'+
+      '<span class="iar">→ embed →</span>'+
+      '<div class="kb'+(fr.n>=3?' on':'')+'">🗄️ Vector DB<br><small>the knowledge base</small></div>'+
+      '</div><div class="enote">'+fr.note+'</div>';
+  }
+  mkAlgo("idxViz","idxStage",[
+    {n:0,note:'This one-time prep happens BEFORE any questions are asked.',explain:"RAG needs a searchable knowledge base. You build it once (and update it when docs change)."},
+    {n:1,note:'Start with your documents — policies, manuals, FAQs, notes.',explain:"<b>Documents.</b> Whatever knowledge you want the AI to draw on."},
+    {n:2,note:'Split each document into small chunks (by section or paragraph).',explain:"<b>Chunk.</b> Break documents into bite-sized pieces so retrieval can return just the relevant part."},
+    {n:3,note:'✅ Embed every chunk and store the vectors in a vector DB — now it\'s searchable by meaning.',explain:"<b>Embed &amp; store.</b> Each chunk becomes a vector in the database. This is exactly what the \"Search KB\" step searched. The knowledge base is ready."}
+  ],render);
+})();
+
+var QA=[
+  ["What problem does RAG solve?","A model only knows its training data — not your private documents or anything newer than its cutoff. Asked about such things, it may refuse or hallucinate. RAG supplies the relevant information at question time so the model can answer accurately from your actual data."],
+  ["What does RAG stand for and mean?","Retrieval-Augmented Generation. Before the model generates an answer, the system retrieves relevant information (from your documents) and augments the prompt with it. The model then generates its answer using that supplied context — an open-book approach."],
+  ["Walk through the RAG flow.","Embed the user's question into a vector; search the knowledge base for the nearest chunks; retrieve the top matches; inject them into the prompt alongside the question; then have the model generate an answer from that supplied text. Retrieve first, then generate."],
+  ["What does 'grounding' mean and why does it matter?","Grounding means the answer is built from specific retrieved sources rather than the model's memory, so you can cite where it came from. It sharply reduces hallucination (the model summarizes real text instead of guessing) and lets users verify the answer."],
+  ["How do you prepare documents for RAG (indexing)?","One time up front: split each document into small chunks (by section or paragraph), embed each chunk into a vector, and store those vectors in a vector database. That database is the knowledge base the retrieval step searches. Re-index when documents change."],
+  ["What most affects the quality of a RAG answer?","Retrieval quality. If the wrong chunks are retrieved, the model answers from wrong context and gets it wrong — 'good chunks in, good answer out.' Sensible chunking and keeping the index fresh are key to retrieving the right material."]
+];
+var accWrap=document.getElementById("accWrap");
+QA.forEach(function(qa,i){
+  var d=document.createElement("details"); d.className="acc";
+  d.innerHTML='<summary><span class="q">Q'+(i+1)+'</span>'+qa[0]+'<span class="plus">+</span></summary><div class="ans">'+qa[1]+'</div>';
+  accWrap.appendChild(d);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI + LLMs · 09 Validating AI Outputs — Lecture</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .vlbl{font-family:var(--mono);font-size:.68rem;color:var(--faint);letter-spacing:.05em;margin:18px 0 8px}
+  .stg{background:#0a0f18;border:1px solid var(--border-2);border-radius:12px;padding:16px}
+  .out{font-family:var(--mono);font-size:.86rem;border:2px solid var(--border-2);border-radius:10px;padding:14px;background:var(--panel);text-align:center;position:relative;transition:border-color .3s}
+  .out.unv{border-color:var(--warn)} .out.ver{border-color:var(--ok)}
+  .stamp{display:inline-block;margin-top:12px;font-family:var(--mono);font-size:.82rem;font-weight:700;padding:6px 14px;border-radius:8px;transform:rotate(-4deg)}
+  .stamp.warn{color:var(--warn);border:2px solid var(--warn);background:rgba(251,191,36,.08)}
+  .stamp.ok{color:var(--ok);border:2px solid var(--ok);background:rgba(52,211,153,.08)}
+  .checks{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:.76rem}
+  .chk{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--border-2);border-radius:8px;background:var(--panel);opacity:.35;transition:opacity .3s}
+  .chk.on{opacity:1}
+  .chk.pass{border-color:var(--ok);color:var(--ok)} .chk.fail{border-color:var(--bad);color:var(--bad)}
+  .chk .mk{width:20px;flex:none;text-align:center}
+  .runs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .run{flex:1;min-width:110px;border:1px solid var(--border-2);border-radius:9px;padding:11px;text-align:center;font-family:var(--mono);font-size:.74rem;background:var(--panel);opacity:.35;transition:opacity .3s}
+  .run.on{opacity:1}
+  .run .lb{font-size:.58rem;color:var(--faint);display:block;margin-bottom:4px}
+  .run .v{font-weight:700;color:var(--text)}
+  .run.a .v{color:var(--accent-2)} .run.b .v{color:var(--accent-3)}
+  .rnote{margin-top:12px;padding:10px 13px;border:1px dashed var(--border-2);border-radius:8px;font-family:var(--mono);font-size:.74rem;color:var(--muted);min-height:1.2em}
+  .qb{font-family:var(--mono);font-size:.76rem;color:var(--accent-2);border:1px solid var(--accent-2);border-radius:8px;padding:9px 12px;background:rgba(167,139,250,.06);margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">AI + LLMs · 09 Validating AI Outputs</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="overview.html">Section overview</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv"><span class="n">Lesson 09</span> · ✅ Production-ready</div>
+    <h1 class="rv d1">Validating with a <span class="grad">testing mindset</span></h1>
+    <p class="lead rv d2">The safest habit you can build: treat every AI output as <b>unverified</b> until proven otherwise — like untrusted input. Check it with logic, test cases, and repetition before you rely on it.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>Don't trust blindly</b><span>verify first</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>Logic &amp; tests</b><span>automated checks</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>Consistency</b><span>spot the flaky ones</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>Confidence</b><span>ship what you trust</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 CONCEPT -->
+<section id="concept">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Idea</p>
+    <h2 class="rv">Output is a claim, not a fact</h2>
+    <p class="lead rv d1">A tester assumes code is broken until tests prove it works. Bring that same mindset to AI: an answer is a <b>claim</b> to be checked, not a truth to be trusted. This lesson is about turning that suspicion into concrete checks.</p>
+  </div>
+</section>
+
+<!-- 02 DON'T TRUST -->
+<section id="trust">
+  <div class="container">
+    <p class="eyebrow rv">02 · Don't Trust Blindly</p>
+    <h2 class="rv">Unverified until checked</h2>
+    <p class="lead rv d1">The default stance for any AI output — especially facts, numbers, and anything driving a decision — is <b>unverified</b>. Only after it passes a check does it earn the right to be used.</p>
+    <div class="vlbl rv d2">▶ FROM UNVERIFIED TO VERIFIED</div>
+    <div class="rv d2" id="trustViz">
+      <div class="stg" id="trustStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 LOGIC/TESTS -->
+<section id="tests">
+  <div class="container">
+    <p class="eyebrow rv">03 · Validate With Logic &amp; Test Cases</p>
+    <h2 class="rv">Turn suspicion into automatic checks</h2>
+    <p class="lead rv d1">Most outputs can be checked by code: is it the right <b>type</b>? In a sensible <b>range</b>? The correct <b>format</b>? Does it match a known answer (a <b>test case</b>) or a rule you can verify? Run the checks automatically on every output.</p>
+    <div class="vlbl rv d2">▶ RUN THE CHECKS ON AN EXTRACTED TOTAL</div>
+    <div class="rv d2" id="checkViz">
+      <div class="stg" id="checkStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 CONSISTENCY -->
+<section id="consistency">
+  <div class="container">
+    <p class="eyebrow rv">04 · Spot Incorrect or Inconsistent Outputs</p>
+    <h2 class="rv">Ask again — do you get the same answer?</h2>
+    <p class="lead rv d1">A powerful trick: run the same input <b>several times</b>. If a critical task gives different answers on different runs, that inconsistency is a warning — the model isn't sure. Use it to flag low-confidence results or take a majority vote.</p>
+    <div class="vlbl rv d2">▶ SAME QUESTION, THREE RUNS</div>
+    <div class="rv d2" id="consViz">
+      <div class="stg" id="consStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- WATCH OUT -->
+<section id="watch">
+  <div class="container">
+    <p class="eyebrow rv">05 · Keep in Mind</p>
+    <h2 class="rv">Building the habit</h2>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card rv d1"><h3>🕵️ Suspicious by default</h3><p>Assume every output needs checking, most of all facts and numbers.</p></div>
+      <div class="card rv d2"><h3>🤖 Automate the checks</h3><p>Type, range, format, and test-case checks run on every output, not by hand.</p></div>
+      <div class="card rv d3"><h3>🔁 Repeat to reveal flakiness</h3><p>Inconsistent answers across runs signal a task the model can't do reliably.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <div class="container">
+    <p class="eyebrow rv">06 · Check Your Understanding</p>
+    <h2 class="rv">Questions</h2>
+    <p class="lead rv d1">Click any question to reveal a plain-English answer.</p>
+    <div style="margin-top:24px;max-width:820px" id="accWrap"></div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">Recap</p>
+    <h2 class="rv">Summary</h2>
+    <div class="split top" style="margin-top:22px">
+      <div class="rv d1">
+        <div class="timeline">
+          <div class="tl-item"><span class="dot"></span><b>Don't trust blindly</b><p>Every output is unverified until a check passes.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Logic &amp; test cases</b><p>Auto-check type, range, format, and known answers.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Consistency</b><p>Repeat the input; disagreement flags low confidence.</p></div>
+          <div class="tl-item"><span class="dot" style="border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12)"></span><b>Then ship</b><p>Rely only on outputs you've actually verified.</p></div>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="grid" style="gap:12px">
+          <div class="card" style="padding:15px"><b>🧪 Output is a claim to test.</b></div>
+          <div class="card" style="padding:15px"><b>✅ Automate type/range/format checks.</b></div>
+          <div class="card" style="padding:15px"><b>🔁 Flaky across runs = don't trust.</b></div>
+          <div class="card" style="padding:15px"><b>🛡️ Verify, then rely.</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="callout tip rv d3" style="margin-top:20px"><b>That's Phase 3 done.</b> You can build AI features and ship them safely. Next, <b>Phase 4 · Going Deeper</b> unlocks the patterns real products use — embeddings, RAG, tool calling, and AI security.</div>
+  </div>
+</section>
+
+<footer class="pager">
+  <a class="prev" href="08-optimizing-ai.html"><span class="dir">← Previous</span><b>Optimizing AI Usage</b></a>
+  <a class="next" href="10-embeddings-vectors.html"><span class="dir">Next lesson →</span><b>Embeddings &amp; Vector Search</b></a>
+</footer>
+<div class="footer">Mentoring · Building with AI + LLMs · 09 Validating AI Outputs</div>
+<script src="../assets/app.js"></script>
+<script>
+function mkAlgo(vizId, stageId, frames, renderer){
+  var root=document.getElementById(vizId);
+  if(!root || !window.AlgoViz) return;
+  var stage=document.getElementById(stageId);
+  AlgoViz(root, frames.map(function(fr){ return {explain:fr.explain, apply:function(){ renderer(stage, fr); }}; }));
+}
+
+/* (a) don't trust */
+(function(){
+  function render(stage,fr){
+    var cls = fr.stage==="ver" ? "out ver" : (fr.stage==="unv" ? "out unv" : "out");
+    var stamp = fr.stage==="unv" ? '<div class="stamp warn">⚠ UNVERIFIED</div>'
+              : fr.stage==="ver" ? '<div class="stamp ok">✅ VERIFIED — safe to use</div>' : '';
+    stage.innerHTML='<div class="'+cls+'">🧠 AI says: "Your order will arrive on Aug 12."</div><div style="text-align:center">'+stamp+'</div>';
+  }
+  mkAlgo("trustViz","trustStage",[
+    {stage:"raw",explain:"The model produces an answer. It's tempting to show it to the user immediately — resist that."},
+    {stage:"unv",explain:"Stamp it <b>UNVERIFIED</b>. Treat it like untrusted input: it might be a hallucination, a wrong date, a bad calculation. Don't act on it yet."},
+    {stage:"ver",explain:"Only after a check — here, confirming the date against the real shipping system — does it become <b>VERIFIED</b> and safe to show. Distrust first, verify, then use."}
+  ],render);
+})();
+
+/* (b) logic/test checks */
+(function(){
+  var CHECKS=[
+    {t:'Is it a number?',pass:true},
+    {t:'In a sensible range (0 – 100,000)?',pass:true},
+    {t:'Correct format (2 decimals)?',pass:true},
+    {t:'Matches the sum of line items? (1,150 ≠ 1,250)',pass:false}
+  ];
+  function render(stage,fr){
+    var rows=CHECKS.map(function(c,i){
+      var cls="chk"+(i<fr.n?' on':'')+(i<fr.n?(c.pass?' pass':' fail'):'');
+      var mk=i<fr.n?(c.pass?'✓':'✗'):'·';
+      return '<div class="'+cls+'"><span class="mk">'+mk+'</span>'+c.t+'</div>';
+    }).join("");
+    stage.innerHTML='<div class="qb">AI extracted invoice total: <b>$1,250.00</b></div><div class="checks">'+rows+'</div>'+
+      (fr.done?'<div class="rnote" style="border-color:var(--bad);color:var(--muted)">⛔ A check failed → reject this output and flag the invoice for review, instead of paying the wrong amount.</div>':'');
+  }
+  mkAlgo("checkViz","checkStage",[
+    {n:0,done:false,explain:"The AI read an invoice and extracted a total of $1,250. Before using it, run automatic checks."},
+    {n:1,done:false,explain:"<b>Type check</b>: is it actually a number? ✓ Yes."},
+    {n:2,done:false,explain:"<b>Range check</b>: is it in a believable range? ✓ Yes — not negative, not a billion."},
+    {n:3,done:false,explain:"<b>Format check</b>: currency with two decimals? ✓ Yes."},
+    {n:4,done:true,explain:"<b>Logic / test-case check</b>: does it equal the sum of the line items? The items add to $1,150 — ✗ mismatch! The model misread. Because we checked, we catch it before paying the wrong total."}
+  ],render);
+})();
+
+/* (c) consistency */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="qb">Task: categorize the ticket — billing / technical / other</div>'+
+      '<div class="runs">'+
+      '<div class="run a'+(fr.n>=1?' on':'')+'"><span class="lb">RUN 1</span><span class="v">billing</span></div>'+
+      '<div class="run b'+(fr.n>=2?' on':'')+'"><span class="lb">RUN 2</span><span class="v">technical</span></div>'+
+      '<div class="run a'+(fr.n>=3?' on':'')+'"><span class="lb">RUN 3</span><span class="v">billing</span></div>'+
+      '</div><div class="rnote">'+fr.note+'</div>';
+  }
+  mkAlgo("consViz","consStage",[
+    {n:0,note:'We run the SAME ticket through the model three times.',explain:"For a critical decision, don't rely on a single run. Send the identical input several times and compare."},
+    {n:1,note:'Run 1 → "billing".',explain:"First run says <b>billing</b>."},
+    {n:2,note:'Run 2 → "technical". Different! ⚠',explain:"Second run says <b>technical</b> — a different answer for the exact same input. That's a red flag: the model isn't confident here."},
+    {n:3,note:'Run 3 → "billing". Majority = billing (2 of 3), but the disagreement means: flag for a human, or lower the confidence.',explain:"Third run: <b>billing</b> again. The inconsistency tells you this case is uncertain. You might take the majority vote, but you should also flag it for review rather than trust any single run."}
+  ],render);
+})();
+
+var QA=[
+  ["What does a 'testing mindset' mean for AI outputs?","Treating each output as a claim to be verified rather than a fact to be trusted — the way a tester assumes code is broken until tests prove otherwise. You actively look for ways the output could be wrong and check it before relying on it."],
+  ["Why shouldn't you trust AI output by default?","Because models can hallucinate, miscalculate, or misread — and they do it fluently, so wrong answers look just as confident as right ones. Especially for facts, numbers, and anything driving a decision, the safe default is 'unverified until checked.'"],
+  ["How do you validate an output with logic and test cases?","Run automatic checks: is it the right type? In a sensible range? The correct format? Does it match a known correct answer or a rule you can verify (like a total equaling the sum of line items)? Outputs that fail are rejected, retried, or flagged — never used blindly."],
+  ["How does repetition help you catch bad outputs?","Running the same input several times reveals consistency. If a critical task returns different answers on different runs, that disagreement signals the model is unsure. You can take a majority vote and, importantly, flag the inconsistent case for review instead of trusting one run."],
+  ["What's an example of a logic check catching an error?","An AI extracts an invoice total of $1,250, but the line items sum to $1,150. A simple rule — 'the total must equal the sum of items' — catches the mismatch, so you reject the value and review it rather than paying the wrong amount."],
+  ["When is a single AI answer safe to rely on?","After it has passed your checks — type/range/format validation, any logic or test-case rules, and (for critical decisions) a consistency check. Verify first; then rely. Unverified outputs, however plausible, shouldn't drive important actions."]
+];
+var accWrap=document.getElementById("accWrap");
+QA.forEach(function(qa,i){
+  var d=document.createElement("details"); d.className="acc";
+  d.innerHTML='<summary><span class="q">Q'+(i+1)+'</span>'+qa[0]+'<span class="plus">+</span></summary><div class="ans">'+qa[1]+'</div>';
+  accWrap.appendChild(d);
+});
+</script>
+</body>
+</html>

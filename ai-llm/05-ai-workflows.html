@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI + LLMs · 05 Automating Workflows — Lecture</title>
+<link rel="stylesheet" href="../assets/styles.css">
+<style>
+  .vlbl{font-family:var(--mono);font-size:.68rem;color:var(--faint);letter-spacing:.05em;margin:18px 0 8px}
+  .stg{background:#0a0f18;border:1px solid var(--border-2);border-radius:12px;padding:16px}
+  .goal{font-family:var(--mono);font-size:.82rem;color:var(--accent-2);border:1px solid var(--accent-2);border-radius:8px;padding:9px 12px;background:rgba(167,139,250,.06);display:inline-block;margin-bottom:12px}
+  .steplist{display:flex;flex-direction:column;gap:6px}
+  .stp{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--border-2);border-radius:8px;background:var(--panel);font-family:var(--mono);font-size:.76rem;color:var(--muted);opacity:.3;transition:opacity .3s}
+  .stp.on{opacity:1} .stp.cur{border-color:var(--accent-2);color:var(--text)}
+  .stp .n{width:20px;height:20px;border-radius:50%;background:rgba(167,139,250,.18);color:var(--accent-2);display:grid;place-items:center;font-size:.66rem;flex:none}
+  .chain{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:.74rem}
+  .cnode{padding:9px 12px;border:1px solid var(--border-2);border-radius:8px;background:var(--panel);opacity:.3;transition:opacity .3s}
+  .cnode.on{opacity:1;border-color:var(--accent-2)}
+  .cnode .lb{font-size:.56rem;color:var(--faint);display:block;margin-bottom:2px}
+  .cnode .io{color:var(--ok);font-size:.66rem;margin-top:3px}
+  .cdown{text-align:center;color:var(--faint)}
+  .loop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);font-size:.76rem}
+  .ln{border:1px solid var(--border-2);border-radius:10px;padding:12px 15px;background:var(--panel);text-align:center;opacity:.4;transition:opacity .25s,border-color .25s}
+  .ln.on{opacity:1;border-color:var(--accent-2)}
+  .ln.tool.on{border-color:var(--accent-3)} .ln.ans.on{border-color:var(--ok)}
+  .lar{color:var(--faint)}
+  .lnote{margin-top:12px;padding:10px 13px;border:1px dashed var(--border-2);border-radius:8px;font-family:var(--mono);font-size:.74rem;color:var(--muted);min-height:1.2em}
+  .toolbox{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+  .tool{border:1px solid var(--border-2);border-radius:10px;padding:11px 14px;background:var(--panel);text-align:center;font-family:var(--mono);font-size:.72rem;color:var(--muted);transition:all .25s;min-width:88px}
+  .tool.pick{border-color:var(--accent);color:var(--accent);background:rgba(34,211,238,.08);transform:translateY(-3px)}
+  .tool .ic{font-size:1.3rem;display:block;margin-bottom:3px}
+  .task{font-family:var(--mono);font-size:.78rem;color:var(--accent-2);text-align:center;min-height:1.2em}
+</style>
+</head>
+<body>
+<div class="scrollbar" id="scrollbar"></div>
+<nav class="top">
+  <a class="logo" href="../index.html"><span class="g">🎓</span><span>Mentoring</span></a>
+  <div class="crumb">AI + LLMs · 05 Automating Workflows</div>
+  <div class="topnav"><a href="../index.html">← All subjects</a><a class="all" href="overview.html">Section overview</a></div>
+</nav>
+
+<!-- HERO -->
+<header class="page-hero">
+  <div class="container">
+    <div class="kicker rv"><span class="n">Lesson 05</span> · 🔗 Building with AI</div>
+    <h1 class="rv d1">Automating <span class="grad">workflows</span></h1>
+    <p class="lead rv d2">A single prompt answers a question. But real work is <b>many steps</b>. "Agentic thinking" means letting AI drive a multi-step job — breaking it down, chaining the pieces, and using tools when it needs them.</p>
+    <div class="outcomes">
+      <div class="outcome rv d1"><span class="ck">✓</span><div><b>Break it down</b><span>task → steps</span></div></div>
+      <div class="outcome rv d2"><span class="ck">✓</span><div><b>Chain steps</b><span>output → input</span></div></div>
+      <div class="outcome rv d3"><span class="ck">✓</span><div><b>AI + tools</b><span>act, don't just talk</span></div></div>
+      <div class="outcome rv d4"><span class="ck">✓</span><div><b>Skills</b><span>pick the right tool</span></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 CONCEPT -->
+<section id="concept">
+  <div class="container">
+    <p class="eyebrow rv">01 · The Idea</p>
+    <h2 class="rv">From answering to doing</h2>
+    <p class="lead rv d1">So far the AI has <em>answered</em>. Automation is about the AI <em>doing</em> — completing a whole task made of several steps, sometimes reaching out to tools (a calculator, a search, a calendar) along the way. This shift from "chatbot" to "worker" is what people mean by <b>agentic</b>.</p>
+  </div>
+</section>
+
+<!-- 02 BREAK DOWN -->
+<section id="breakdown">
+  <div class="container">
+    <p class="eyebrow rv">02 · Break a Task Into Steps</p>
+    <h2 class="rv">A big job is many small ones</h2>
+    <p class="lead rv d1">The first move in automation is decomposition: turn one fuzzy goal into an ordered list of concrete steps. Each step is something an AI (or a tool) can reliably do.</p>
+    <div class="vlbl rv d2">▶ DECOMPOSE A GOAL — "publish a weekly newsletter"</div>
+    <div class="rv d2" id="brkViz">
+      <div class="stg" id="brkStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 CHAIN -->
+<section id="chain">
+  <div class="container">
+    <p class="eyebrow rv">03 · Chain Prompts Across Steps</p>
+    <h2 class="rv">Each step feeds the next</h2>
+    <p class="lead rv d1">Once you have steps, you <b>chain</b> them: the output of one becomes the input to the next. The app runs them in order automatically — no human copy-pasting between prompts.</p>
+    <div class="vlbl rv d2">▶ RUN THE CHAIN — data flows down</div>
+    <div class="rv d2" id="chainViz">
+      <div class="stg" id="chainStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 AGENT + TOOLS -->
+<section id="tools">
+  <div class="container">
+    <p class="eyebrow rv">04 · Agent-Like Systems (AI + Tools)</p>
+    <h2 class="rv">When AI decides to use a tool</h2>
+    <p class="lead rv d1">LLMs are unreliable at some things — exact math, live data, real actions. The breakthrough: the AI can <b>recognize</b> when it needs help and <b>call a tool</b>, then use the tool's result to answer. It acts, instead of guessing.</p>
+    <div class="vlbl rv d2">▶ WATCH AI REACH FOR A TOOL</div>
+    <div class="rv d2" id="agentViz">
+      <div class="stg" id="agentStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 SKILLS -->
+<section id="skills">
+  <div class="container">
+    <p class="eyebrow rv">05 · Tool Usage — the "Skills" Idea</p>
+    <h2 class="rv">Give it a toolbox; it picks the tool</h2>
+    <p class="lead rv d1">You equip the AI with a set of tools — think of them as <b>skills</b>. For each task, the AI chooses the right one. More tools = more it can do. Watch it match tasks to skills:</p>
+    <div class="vlbl rv d2">▶ RIGHT TOOL FOR THE JOB</div>
+    <div class="rv d2" id="skillViz">
+      <div class="stg" id="skillStage"></div>
+      <div class="av-explain"></div>
+      <div class="av-bar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- WATCH OUT -->
+<section id="watch">
+  <div class="container">
+    <p class="eyebrow rv">06 · Keep in Mind</p>
+    <h2 class="rv">Automation needs a leash</h2>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="card rv d1"><h3>🪜 Small steps win</h3><p>Break jobs down; each reliable step makes the whole chain reliable.</p></div>
+      <div class="card rv d2"><h3>🧯 Failures compound</h3><p>If step 2 is wrong, everything after inherits the error. Check between steps.</p></div>
+      <div class="card rv d3"><h3>👀 Keep oversight</h3><p>An AI taking actions can do real damage — add limits and human checks for risky steps.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <div class="container">
+    <p class="eyebrow rv">07 · Check Your Understanding</p>
+    <h2 class="rv">Questions</h2>
+    <p class="lead rv d1">Click any question to reveal a plain-English answer.</p>
+    <div style="margin-top:24px;max-width:820px" id="accWrap"></div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary" style="border-bottom:none">
+  <div class="container">
+    <p class="eyebrow rv">Recap</p>
+    <h2 class="rv">Summary</h2>
+    <div class="split top" style="margin-top:22px">
+      <div class="rv d1">
+        <div class="timeline">
+          <div class="tl-item"><span class="dot"></span><b>Break down</b><p>One goal → an ordered list of concrete steps.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>Chain</b><p>Each step's output feeds the next, run automatically.</p></div>
+          <div class="tl-item"><span class="dot"></span><b>AI + tools</b><p>The AI decides when to call a tool and uses the result.</p></div>
+          <div class="tl-item"><span class="dot" style="border-color:var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.12)"></span><b>Skills</b><p>Give it a toolbox; it picks the right tool per task.</p></div>
+        </div>
+      </div>
+      <div class="rv d2">
+        <div class="grid" style="gap:12px">
+          <div class="card" style="padding:15px"><b>🧩 Decompose the task first.</b></div>
+          <div class="card" style="padding:15px"><b>🔗 Output of one → input of next.</b></div>
+          <div class="card" style="padding:15px"><b>🛠️ AI can act, not just answer.</b></div>
+          <div class="card" style="padding:15px"><b>👀 Automation needs oversight.</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="pager">
+  <a class="prev" href="04-ai-features.html"><span class="dir">← Previous</span><b>AI-Powered Features</b></a>
+  <a class="next" href="06-agentic-systems.html"><span class="dir">Next lesson →</span><b>Agentic Systems (Intro)</b></a>
+</footer>
+<div class="footer">Mentoring · Building with AI + LLMs · 05 Automating Workflows</div>
+<script src="../assets/app.js"></script>
+<script>
+function mkAlgo(vizId, stageId, frames, renderer){
+  var root=document.getElementById(vizId);
+  if(!root || !window.AlgoViz) return;
+  var stage=document.getElementById(stageId);
+  AlgoViz(root, frames.map(function(fr){ return {explain:fr.explain, apply:function(){ renderer(stage, fr); }}; }));
+}
+
+/* (a) break down */
+(function(){
+  var STEPS=["Find this week's top 5 articles","Summarize each in 2 sentences","Write a short intro","Assemble into the newsletter layout","Send to subscribers"];
+  function render(stage,fr){
+    var lis=STEPS.map(function(s,i){ var c=i<fr.n?(i===fr.n-1?"cur":"on"):""; return '<div class="stp '+c+'"><span class="n">'+(i+1)+'</span>'+s+'</div>'; }).join("");
+    stage.innerHTML='<div class="goal">GOAL: Publish a weekly newsletter</div><div class="steplist">'+lis+'</div>';
+  }
+  mkAlgo("brkViz","brkStage",[
+    {n:0,explain:'"Publish a weekly newsletter" is a whole project, not one prompt. Let\'s break it into steps AI can handle.'},
+    {n:1,explain:"<b>Step 1</b> — find this week's top articles. (Might use a search tool.)"},
+    {n:2,explain:"<b>Step 2</b> — summarize each one briefly."},
+    {n:3,explain:"<b>Step 3</b> — write a short intro tying them together."},
+    {n:4,explain:"<b>Step 4</b> — assemble everything into the newsletter layout."},
+    {n:5,explain:"<b>Step 5</b> — send it out. Five concrete steps — now it's an automatable workflow, not a vague wish."}
+  ],render);
+})();
+
+/* (b) chain */
+(function(){
+  var N=[
+    {lb:"STEP 1 · gather",io:"→ 5 article links"},
+    {lb:"STEP 2 · summarize (uses step 1's links)",io:"→ 5 short summaries"},
+    {lb:"STEP 3 · assemble (uses step 2's summaries)",io:"→ formatted newsletter"}
+  ];
+  function render(stage,fr){
+    var html='';
+    N.forEach(function(n,i){
+      html+='<div class="cnode'+(i<fr.n?' on':'')+'"><span class="lb">'+n.lb+'</span>'+(i<fr.n?'<div class="io">'+n.io+'</div>':'…')+'</div>';
+      if(i<N.length-1) html+='<div class="cdown">↓ output becomes next input</div>';
+    });
+    stage.innerHTML='<div class="chain">'+html+'</div>';
+  }
+  mkAlgo("chainViz","chainStage",[
+    {n:0,explain:"Now we run the steps as a <b>chain</b>. Watch how each step's result flows into the next."},
+    {n:1,explain:"<b>Step 1</b> gathers article links. Its output — the links — is handed to step 2."},
+    {n:2,explain:"<b>Step 2</b> takes those links and produces summaries. Those summaries feed step 3."},
+    {n:3,explain:"<b>Step 3</b> assembles the summaries into the finished newsletter. The app passed data between steps automatically — no human in the middle."}
+  ],render);
+})();
+
+/* (c) agent + tools */
+(function(){
+  function render(stage,fr){
+    stage.innerHTML=
+      '<div class="loop">'+
+      '<div class="ln ai'+(fr.ai?' on':'')+'">🧠 AI</div>'+
+      '<span class="lar">'+(fr.dir==='out'?'— calls →':(fr.dir==='in'?'← result —':'·'))+'</span>'+
+      '<div class="ln tool'+(fr.tool?' on':'')+'">🧮 Calculator</div>'+
+      '<span class="lar">'+(fr.answer?'→':'·')+'</span>'+
+      '<div class="ln ans'+(fr.answer?' on':'')+'">💬 Answer</div>'+
+      '</div><div class="lnote">'+fr.note+'</div>';
+  }
+  mkAlgo("agentViz","agentStage",[
+    {ai:true,tool:false,answer:false,dir:'',note:'User asks: "What\'s a 15% tip on $84.50?"',explain:"A math question. LLMs are surprisingly unreliable at exact arithmetic — guessing here would risk a wrong number."},
+    {ai:true,tool:false,answer:false,dir:'',note:'AI decides: "I shouldn\'t guess the math — I\'ll use the calculator tool."',explain:"Instead of answering directly, the AI <b>recognizes</b> it needs a tool. This decision is the heart of an agent."},
+    {ai:true,tool:true,answer:false,dir:'out',note:'AI calls: calculator( 84.50 × 0.15 )',explain:"The AI <b>calls the calculator tool</b>, passing the exact numbers it wants computed."},
+    {ai:true,tool:true,answer:false,dir:'in',note:'Calculator returns: 12.675',explain:"The tool does the math precisely and hands the result back to the AI."},
+    {ai:true,tool:true,answer:true,dir:'in',note:'✅ AI answers: "A 15% tip is about $12.68."',explain:"The AI uses the tool's result to give a correct, confident answer. It didn't compute — it knew to <b>act</b>, then reported the result."}
+  ],render);
+})();
+
+/* (d) skills / toolbox */
+(function(){
+  var TOOLS=[{ic:"🧮",n:"calculator"},{ic:"🔎",n:"web search"},{ic:"📅",n:"calendar"},{ic:"✉️",n:"email"}];
+  function render(stage,fr){
+    var box=TOOLS.map(function(t,i){ return '<div class="tool'+(i===fr.pick?' pick':'')+'"><span class="ic">'+t.ic+'</span>'+t.n+'</div>'; }).join("");
+    stage.innerHTML='<div class="toolbox">'+box+'</div><div class="task">'+fr.task+'</div>';
+  }
+  mkAlgo("skillViz","skillStage",[
+    {pick:-1,task:"The AI has four tools (skills) available.",explain:"The AI is given a <b>toolbox</b>: calculator, web search, calendar, email. For any task, it selects the fitting one."},
+    {pick:1,task:'Task: "What\'s the latest news about the Mars mission?" → 🔎 web search',explain:"Live information the model can't know from training → it picks <b>web search</b>."},
+    {pick:2,task:'Task: "How many days until December 25?" → 📅 calendar',explain:"A date calculation → it picks the <b>calendar</b> tool."},
+    {pick:3,task:'Task: "Send the summary to my team." → ✉️ email',explain:"An action in the real world → it picks the <b>email</b> tool. More tools = more the AI can actually do."}
+  ],render);
+})();
+
+var QA=[
+  ["What does 'agentic' mean in simple terms?","It means the AI does more than answer a single question — it works through a multi-step task, and can take actions (like using tools) to get it done. The shift is from a chatbot that talks to a 'worker' that does."],
+  ["Why break a task into steps before automating it?","Because a big fuzzy goal is unreliable for an AI to do in one shot, but each small concrete step is something it (or a tool) can do dependably. Decomposition turns a vague project into an ordered, automatable workflow."],
+  ["What does it mean to chain prompts?","Running steps in sequence where the output of one step becomes the input to the next — e.g. gather links → summarize them → assemble a newsletter. The app passes data between steps automatically, with no human copy-pasting."],
+  ["How does an AI 'use a tool'?","When the AI recognizes it can't reliably answer alone (exact math, live data, real actions), it issues a tool call with the needed inputs, the tool runs and returns a result, and the AI uses that result to answer. It acts instead of guessing."],
+  ["What is the 'skills' or toolbox idea?","You equip the AI with a set of tools (calculator, search, calendar, email, etc.), and for each task it selects the appropriate one. The more well-chosen tools it has, the more it can actually accomplish — the tools extend its abilities."],
+  ["What's the main risk of automating with AI?","Errors compound: if an early step is wrong, every later step inherits the mistake. And an AI that takes real actions can cause real damage. So you validate between steps and keep human oversight (limits, approvals) on anything risky."]
+];
+var accWrap=document.getElementById("accWrap");
+QA.forEach(function(qa,i){
+  var d=document.createElement("details"); d.className="acc";
+  d.innerHTML='<summary><span class="q">Q'+(i+1)+'</span>'+qa[0]+'<span class="plus">+</span></summary><div class="ans">'+qa[1]+'</div>';
+  accWrap.appendChild(d);
+});
+</script>
+</body>
+</html>
